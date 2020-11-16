@@ -34,7 +34,7 @@ def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', sa
 
     fig, ax = plt.subplots(figsize=(10,8))
     map_plotted = plt.imshow(map_to_plot, vmin=min, vmax=max, cmap='jet', origin='lower', extent=[-60, 300, -90, 90])
-    if label==None:
+    if label!=None:
         cb = plt.colorbar(map_plotted, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
         cb.set_label(label)
     ax.set_xlim(-60, 300)
