@@ -24,7 +24,7 @@ def mean_on_healpy_map(Nside, map, depth_neighbours=1): #supposed Nested and map
         mean_map[i] = np.nansum(map[neighbour_pixels], axis=0)/neighbour_pixels.size
     return mean_map
 
-def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', save=False, savename='Res/cart.pdf', show=False):
+def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', savename=None, show=False):
     m = hp.ma(map)
 
     #attention au sens de l'axe en RA ! --> la on le prend normal et on le retourne à la fin :)
@@ -34,7 +34,7 @@ def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', sa
 
     fig, ax = plt.subplots(figsize=(10,8))
     map_plotted = plt.imshow(map_to_plot, vmin=min, vmax=max, cmap='jet', origin='lower', extent=[-60, 300, -90, 90])
-    if label==None:
+    if label!=None:
         cb = plt.colorbar(map_plotted, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
         cb.set_label(label)
     ax.set_xlim(-60, 300)
@@ -47,7 +47,7 @@ def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', sa
     ax.grid(True, alpha=0.8, linestyle=':')
     plt.title(title)
 
-    if save:
+    if savename != None:
         plt.savefig(savename)
     if show:
         plt.show()
