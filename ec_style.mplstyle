@@ -1,0 +1,81 @@
+#Author: Edmond Chaussidon (CEA)
+
+## FIGURE
+
+figure.titlesize : medium     # size of the figure title
+figure.titleweight : normal   # weight of the figure title
+figure.figsize   : 14, 8      # figure size in inches
+figure.dpi       : 80      # figure dots per inch
+figure.facecolor : 0.75    # figure facecolor; 0.75 is scalar gray
+figure.edgecolor : w       # figure edgecolor
+figure.autolayout : True  # When True, automatically adjust subplot
+figure.frameon : True
+
+#
+# # The figure subplot parameters.  All dimensions are a fraction of the
+# # figure width or height
+# figure.subplot.left    : 0.125  # the left side of the subplots of the figure
+# figure.subplot.right   : 0.9    # the right side of the subplots of the figure
+# figure.subplot.bottom  : 0.1    # the bottom of the subplots of the figure
+# figure.subplot.top     : 0.9    # the top of the subplots of the figure
+# figure.subplot.wspace  : 0.2    # the amount of width reserved for space between subplots,
+#                                 # expressed as a fraction of the average axis width
+# figure.subplot.hspace  : 0.2    # the amount of height reserved for space between subplots,
+#                                 # expressed as a fraction of the average axis height
+
+## LINES
+
+lines.linewidth : 2.0
+
+## AXES
+
+axes.facecolor      : eeeeee       # axes background color
+axes.edgecolor      : black       # axes edge color
+axes.linewidth      : 1.0     # edge linewidth
+axes.labelcolor     : black
+
+axes.prop_cycle: cycler(color=['blue', 'red', 'green', 'gold', 'purple', 'black'])
+
+axes.formatter.use_mathtext : True # When True, use mathtext for scientific notation
+
+## GRID
+
+axes.grid : True
+grid.color: grey
+grid.linestyle: :
+grid.linewidth: 1
+grid.alpha: 0.8
+
+## LEGEND
+
+legend.fancybox: True
+
+
+## TICKS
+
+xtick.direction: out
+ytick.direction: out
+
+
+## IMAGES
+image.aspect : equal
+image.cmap   : jet
+
+## FONT
+
+font.family         : serif
+
+## TEXT
+
+text.color          : k
+text.usetex         : True
+
+mathtext.cal : cursive
+mathtext.rm  : serif
+mathtext.tt  : monospace
+mathtext.it  : serif:italic
+mathtext.bf  : serif:bold
+mathtext.sf  : sans\-serif
+mathtext.fontset : cm
+mathtext.fallback: cm
+mathtext.default : it
