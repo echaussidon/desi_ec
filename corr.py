@@ -26,8 +26,8 @@ def get_ra_dec(Nside):
 
 def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_z=1.6):
     z = np.ones(pixmap.size)*mean_z
-    sel = (pixmap>0) #We remove pixel with nothing inside...
-    print('Number of pix selected in pixmap =', np.sum(sel))
+    sel = (pixmap != 0) #We remove pixel with nothing inside...
+    print('Number of pix selected (non-zeros) in pixmap =', np.sum(sel))
 
     ascii.write([ra_list[sel], dec_list[sel], z[sel], pixmap[sel]],
                  filename , names=['ra', 'dec', 'z', 'w'],
@@ -52,11 +52,11 @@ def compute_result(filename) :
 
     return r, xi, err_r, err_xi
 
-def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', label=None, alpha=1):
+def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markerfacecolor=None, label=None, alpha=1, min_theta=0.05):
     r, xi, err_r, err_xi = compute_result(filename=filename)
     sel = (r>min_theta) & (xi>0.0)
     if err_y==False:
         yerr = None
     else:
         yerr = err_xi[sel]
-    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=6, linestyle=linestyle, color=color, label=label, alpha=alpha)
+    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=6, markerfacecolor=markerfacecolor, linestyle=linestyle, color=color, label=label, alpha=alpha)
