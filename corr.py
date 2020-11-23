@@ -1,7 +1,4 @@
 # coding: utf-8
-
-# function for build_data.py in Mocks folder
-
 # Author : Edmond Chaussidon (CEA)
 
 import numpy as np
