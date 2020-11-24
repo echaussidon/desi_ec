@@ -51,6 +51,10 @@ xtick.direction : out
 ytick.direction : out
 xtick.labelsize : 15
 ytick.labelsize : 15
+xtick.major.size     : 5      # major tick size in points
+xtick.major.width    : 1      # major tick width in points
+ytick.major.size     : 5      # major tick size in points
+ytick.major.width    : 1      # major tick width in points
 
 
 ## IMAGES
