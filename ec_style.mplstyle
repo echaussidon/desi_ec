@@ -9,7 +9,7 @@ figure.dpi         : 100        # figure dots per inch
 figure.autolayout  : False      # When True, automatically adjust subplot
 figure.frameon     : True
 
-figure.subplot.left    : 0.07  # the left side of the subplots of the figure
+figure.subplot.left    : 0.08  # the left side of the subplots of the figure
 figure.subplot.right   : 0.96    # the right side of the subplots of the figure
 figure.subplot.bottom  : 0.1   # the bottom of the subplots of the figure
 figure.subplot.top     : 0.95    # the top of the subplots of the figure
