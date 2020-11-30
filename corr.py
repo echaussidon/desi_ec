@@ -38,16 +38,11 @@ def compute_result(filename) :
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 
     dd=np.array(data_xi['DD'])
-    dr=np.array(data_xi['DR'])+np.array(data_xi['RD'])
     rr=np.array(data_xi['RR'])
     r=np.array(data_xi['R'])
     xi=np.array(data_xi['Xi'])
 
-    edd = np.sqrt(dd)
-    edr = np.sqrt(dr)
-    err = np.sqrt(rr)
     err_xi = (1+xi)/np.sqrt(dd) #### double check the computation for the error
-
     err_r = np.zeros(len(r))/rr
 
     return r, xi, err_r, err_xi
