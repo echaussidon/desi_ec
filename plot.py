@@ -24,11 +24,11 @@ def mean_on_healpy_map(Nside, map, depth_neighbours=1): #supposed Nested and map
         mean_map[i] = np.nansum(map[neighbour_pixels], axis=0)/neighbour_pixels.size
     return mean_map
 
-def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', savename=None, show=False):
-    m = hp.ma(map)
+def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=False):
 
     #attention au sens de l'axe en RA ! --> la on le prend normal et on le retourne à la fin :)
     plt.figure(1)
+    m = hp.ma(map)
     map_to_plot = hp.cartview(m, nest=True, flip='geo', rot=120, fig=1, return_projected_map=True)
     plt.close()
 
@@ -44,7 +44,6 @@ def plot_cart(map, min=None, max=None, title=' ', label=r'[$\#$ $deg^{-2}$]', sa
     ax.set_ylim(-90, 90)
     ax.yaxis.set_ticks(np.arange(-90, 120, 30))
     ax.set_ylabel('Dec. [deg]')
-    ax.grid(True, alpha=0.8, linestyle=':')
     plt.title(title)
 
     if savename != None:
