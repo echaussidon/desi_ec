@@ -89,11 +89,11 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     Return binmid, meds pour pouvoir faire : plt.errorbar(binmid, meds - 1*np.ones(binmid.size), yerr=meds_err, marker='.', linestyle='-', lw=0.9)
     """
 
-    # Selection of pixels with correct fracarea and which respect the up/downclip for the 'syscolname' feature
+    # Selection of pixels with correct fracarea and which respect the up/downclip for the 'feature_name' feature
     sel = (fracarea < 1.1) & (fracarea > 0.9) & (feature >= downclip) & (feature < upclip)
     if not np.any(sel):
         print("Pixel map has no areas (with >90% coverage) with the up/downclip")
-        print("Proceeding without clipping systematics for {}".format(syscolname))
+        print("Proceeding without clipping systematics for {}".format(feature_name))
         sel = (fracarea < 1.1) & (fracarea > 0.9)
     targets = targets[sel]
     feature = feature[sel]
