@@ -84,54 +84,40 @@ def _load_systematics():
                               'Global':[0.0, 7.0, 'PSF Depth in W2-band',30]}
     return sysdict
 
-def qasystematics_binmid_med(targets, pixmap, syscolname, qadir='.', downclip=None, upclip=None, nbins=50, adaptative_binning=True, nobjects_by_bins=1000, fileprefix="sysdens", xlabel=None):
+def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upclip=None, nbins=50, adaptative_binning=False, nobjects_by_bins=1000):
     """
-    Return binmid, meds pour pouvoir faire : plt.errorbar(binmid, meds - 1*np.ones(binmid.size), yerr=meds_err, marker='.', linestyle='-', lw=0.9,)
+    Return binmid, meds pour pouvoir faire : plt.errorbar(binmid, meds - 1*np.ones(binmid.size), yerr=meds_err, marker='.', linestyle='-', lw=0.9)
     """
-    ii = (pixmap['FRACAREA_13538'] < 1.1) & (pixmap['FRACAREA_13538'] > 0.9) & (pixmap[syscolname] >= downclip) & (pixmap[syscolname] < upclip)
 
-    if np.any(ii):
-        pixmapgood = pixmap[ii]
-    else:
-        print("Pixel map has no areas with >90% coverage for passed up/downclip")
+    # Selection of pixels with correct fracarea and which respect the up/downclip for the 'syscolname' feature
+    sel = (fracarea < 1.1) & (fracarea > 0.9) & (feature >= downclip) & (feature < upclip)
+    if not np.any(sel):
+        print("Pixel map has no areas (with >90% coverage) with the up/downclip")
         print("Proceeding without clipping systematics for {}".format(syscolname))
-        ii = (pixmap['FRACAREA_13538'] < 1.1) & (pixmap['FRACAREA_13538'] > 0.9)
-        pixmapgood = pixmap[ii]
+        sel = (fracarea < 1.1) & (fracarea > 0.9)
+    targets = targets[sel]
+    feature = feature[sel]
 
-    targets = targets[ii]
-
-    # ADM set up the x-axis as the systematic of interest.
-    xx = pixmapgood[syscolname]
-
-    if adaptative_binning:
+    if adaptative_binning: #set this option to have variable bin sizes so that each bin contains the same number of pixel (nobjects_by_bins)
         nbr_obj_bins = nobjects_by_bins
-        ksort = np.argsort(xx)
-        bins=xx[ksort[0::nbr_obj_bins]] #Here, get the bins from the data set (needed to be sorted)
-        bins=np.append(bins,xx[ksort[-1]]) #add last point
+        ksort = np.argsort(feature)
+        bins=feature[ksort[0::nbr_obj_bins]] #Here, get the bins from the data set (needed to be sorted)
+        bins=np.append(bins,feature[ksort[-1]]) #add last point
         nbins = bins.size - 1 #OK
         print(nbins)
-    else:
-        # ADM let np.histogram choose a sensible binning.
-        nbr_obj_bins, bins = np.histogram(xx, nbins) #nbins
+    else: # create bin with fix size (depends on the up/downclip value)
+        nbr_obj_bins, bins = np.histogram(feature, nbins)
 
-    # ADM the bin centers rather than the edges.
-    binmid = np.nanmean(np.vstack([bins, np.roll(bins, 1)]), axis=0)[1:]
+    # find in which bins belong each feature value
+    wbin = np.digitize(feature, bins, right=True)
 
-    # ADM set up the y-axis as the deviation of the target density from median density.
-    yy = targets/np.nanmedian(targets)
+    # build normalized targets : the normalization is done by the median density
+    norm_targets = targets/np.nanmedian(targets)
 
-    # ADM determine which bin each systematics value is in.
-    wbin = np.digitize(xx, bins)
+    # digitization of the normalized target density values (first digitized bin is 1 not zero)
+    meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
 
-    # ADM np.digitize closes the end bin whereas np.histogram
-    # ADM leaves it open, so shift the end bin value back by one.
-    wbin[np.argmax(wbin)] -= 1
+    # error for mean (estimation of the std from sample)
+    err_meds = [np.nanstd(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else 0 for bin in range(1, nbins+1)]
 
-    # ADM apply the digitization to the target density values
-    # ADM note that the first digitized bin is 1 not zero.
-    meds = [np.nanmedian(yy[wbin == bin]) for bin in range(1, nbins+1)]
-
-    # EC add error for mean (estimation of the std from sample)
-    err_meds = [np.nanstd(yy[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else 0 for bin in range(1, nbins+1)]
-
-    return bins, binmid, meds, nbr_obj_bins, err_meds
+    return bins, (bins[:-1] + bins[1:])/ 2, meds, nbr_obj_bins, err_meds

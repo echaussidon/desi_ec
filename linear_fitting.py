@@ -13,3 +13,5 @@ class LeastSquares:  # override the class with a better one
         ym = self.model(self.x, *par)
         chi2 = sum((self.y - ym)**2/(self.yerr)**2)
         return chi2
+
+##TO DOOOo

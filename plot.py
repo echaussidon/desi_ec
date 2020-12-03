@@ -25,6 +25,7 @@ def mean_on_healpy_map(Nside, map, depth_neighbours=1): #supposed Nested and map
     return mean_map
 
 def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=False):
+    #il faut absolument mettre title='' dans l'appelle de la function sinon ca plante ....
 
     #attention au sens de l'axe en RA ! --> la on le prend normal et on le retourne à la fin :)
     plt.figure(1)
@@ -32,7 +33,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     map_to_plot = hp.cartview(m, nest=True, flip='geo', rot=120, fig=1, return_projected_map=True)
     plt.close()
 
-    fig, ax = plt.subplots(figsize=(10,8))
+    fig, ax = plt.subplots(figsize=(11,7))
     map_plotted = plt.imshow(map_to_plot, vmin=min, vmax=max, cmap='jet', origin='lower', extent=[-60, 300, -90, 90])
     if label!=None:
         cb = plt.colorbar(map_plotted, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
@@ -44,7 +45,8 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     ax.set_ylim(-90, 90)
     ax.yaxis.set_ticks(np.arange(-90, 120, 30))
     ax.set_ylabel('Dec. [deg]')
-    plt.title(title)
+    if title!='':
+        plt.title(title)
 
     if savename != None:
         plt.savefig(savename)
