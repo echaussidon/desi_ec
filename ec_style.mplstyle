@@ -27,7 +27,7 @@ axes.edgecolor: bcbcbc
 #axes.edgecolor             : black        # axes edge color
 axes.linewidth              : 1.0          # edge linewidth
 axes.labelcolor             : black
-axes.prop_cycle             : cycler(color=['blue', 'red', 'green', 'gold', 'purple', 'black', 'yellow'])
+axes.prop_cycle             : cycler(color=['blue', 'red', 'green', 'gold', 'purple', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'gray'])
 axes.formatter.use_mathtext : True # When True, use mathtext for scientific notation
 axes.labelsize : 15
 
