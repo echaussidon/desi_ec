@@ -71,12 +71,12 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
         
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, origine=120):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120):
     
     #transform healpix map to 2d array
     plt.figure(1)
     m = hp.ma(map)
-    map_to_plot = hp.cartview(m, nest=True, rot=120, flip='geo', fig=1, return_projected_map=True)
+    map_to_plot = hp.cartview(m, nest=True, rot=rot, flip='geo', fig=1, return_projected_map=True)
     plt.close()
     
     #build ra, dec meshgrid to plot 2d array
@@ -88,7 +88,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
 
     ra_grid, dec_grid = np.meshgrid(ra_edge, dec_edge)
 
-    plt.figure()
+    plt.figure(figsize=(11,7))
     ax = plt.subplot(111, projection='mollweide')
     
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)   
@@ -96,18 +96,18 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
         cb = plt.colorbar(mesh, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
         cb.set_label(label)
     if galactic_plane:
-        ra, dec = galactic_plane_icrs.ra.degree - origin, galactic_plane_icrs.dec.degree
+        ra, dec = galactic_plane_icrs.ra.degree - rot, galactic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
         ax.plot(np.radians(ra[index_galactic]), np.radians(dec[index_galactic]), linestyle='-', color='black', label='Galactic plane')
     if ecliptic_plane:
-        ra, dec = ecliptic_plane_icrs.ra.degree - origin, ecliptic_plane_icrs.dec.degree
+        ra, dec = ecliptic_plane_icrs.ra.degree - rot, ecliptic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
         ax.plot(np.radians(ra[index_ecliptic]), np.radians(dec[index_ecliptic]), linestyle=':', color='navy', label='Ecliptic plane')
 
     tick_labels = np.array([150, 120, 90, 60, 30, 0, 330, 300, 270, 240, 210])
-    tick_labels = np.remainder(tick_labels + 360 + origin, 360)
+    tick_labels = np.remainder(tick_labels + 360 + rot, 360)
     tick_labels = np.array(['{0}°'.format(l) for l in tick_labels])
     ax.set_xticklabels(tick_labels) 
 
