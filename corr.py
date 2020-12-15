@@ -32,6 +32,17 @@ def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_
     ascii.write([ra_list[sel], dec_list[sel], z[sel], pixmap[sel]],
                  filename , names=['ra', 'dec', 'z', 'w'],
                  format='no_header', overwrite=True)
+    
+def au_dd(filename):
+    data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
+
+    dd=np.array(data_xi['DD'])
+    dr=np.array(data_xi['DR'])
+    rd=np.array(data_xi['RD'])
+    rr=np.array(data_xi['RR'])
+    r=np.array(data_xi['R'])
+
+    return r, dd, dr, rd, rr
 
 def compute_result(filename) :
 

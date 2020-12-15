@@ -8,6 +8,12 @@ import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
+def to_tex(string):
+    # pour convertir une chaine en chaine de texte affichable par latex dans matplotlib
+    # on enleve les _ 
+    string = string.replace('_', ' ')
+    return string
+
 def mean_on_healpy_map(Nside, map, depth_neighbours=1): #supposed Nested and map a list of pixel
     def get_all_neighbours(Nside, i, depth_neighbours=1):
         pixel_list = hp.get_all_neighbours(Nside, i, nest=True)
