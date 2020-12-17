@@ -95,7 +95,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     ra_grid, dec_grid = np.meshgrid(ra_edge, dec_edge)
 
     plt.figure(figsize=(11,7))
-    ax = plt.subplot(111, projection='mollweide')
+    ax = plt.subplot(111, projection='aitoff')
     
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)   
     if label!=None:
