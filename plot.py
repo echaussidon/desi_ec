@@ -4,6 +4,7 @@
 import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -98,9 +99,12 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     ax = plt.subplot(111, projection=projection)
 
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
+
     if label!=None:
-        cb = plt.colorbar(mesh, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
-        cb.set_label(label)
+        ax_cb = inset_axes(ax, width="25%", height="4.5%", loc='lower left', bbox_to_anchor=(0.375, 0.125, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
+        cb = plt.colorbar(mesh, ax=ax, cax=ax_cb, orientation='horizontal', shrink=0.8, aspect=40)
+        cb.set_label(r'[$\#$ $deg^{-2}$]', x=1.25, labelpad=-37)
+
     if galactic_plane:
         ra, dec = galactic_plane_icrs.ra.degree - rot, galactic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
