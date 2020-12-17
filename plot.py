@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 
 def to_tex(string):
     # pour convertir une chaine en chaine de texte affichable par latex dans matplotlib
-    # on enleve les _ 
+    # on enleve les _
     string = string.replace('_', ' ')
     return string
 
@@ -57,7 +57,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
         ax.plot(galactic_plane_icrs.ra.wrap_at(300*u.deg).degree[index_galactic], galactic_plane_icrs.dec.degree[index_galactic], linestyle='-', color='black', label='Galactic plane')
     if ecliptic_plane:
         ax.plot(ecliptic_plane_icrs.ra.wrap_at(300*u.deg).degree[index_ecliptic], ecliptic_plane_icrs.dec.degree[index_ecliptic], linestyle=':', color='navy', label='Ecliptic plane')
-        
+
     ax.set_xlim(-60, 300)
     ax.xaxis.set_ticks(np.arange(-60, 330, 30))
     plt.gca().invert_xaxis()
@@ -65,8 +65,8 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     ax.set_ylim(-90, 90)
     ax.yaxis.set_ticks(np.arange(-90, 120, 30))
     ax.set_ylabel('Dec. [deg]')
-    
-    if galactic_plane or ecliptic_plane:   
+
+    if galactic_plane or ecliptic_plane:
         ax.legend(loc='lower right')
     if title!='':
         plt.title(title)
@@ -76,15 +76,15 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
         plt.show()
     else:
         plt.close()
-        
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120):
-    
+
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='aitoff'):
+
     #transform healpix map to 2d array
     plt.figure(1)
     m = hp.ma(map)
     map_to_plot = hp.cartview(m, nest=True, rot=rot, flip='geo', fig=1, return_projected_map=True)
     plt.close()
-    
+
     #build ra, dec meshgrid to plot 2d array
     ra_edge = np.linspace(-180, 180, map_to_plot.shape[1]+1)
     dec_edge = np.linspace(-90, 90, map_to_plot.shape[0]+1)
@@ -95,9 +95,9 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     ra_grid, dec_grid = np.meshgrid(ra_edge, dec_edge)
 
     plt.figure(figsize=(11,7))
-    ax = plt.subplot(111, projection='aitoff')
-    
-    mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)   
+    ax = plt.subplot(111, projection=projection)
+
+    mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
     if label!=None:
         cb = plt.colorbar(mesh, ax=ax, orientation='horizontal', shrink=0.8, aspect=40)
         cb.set_label(label)
@@ -115,14 +115,14 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     tick_labels = np.array([150, 120, 90, 60, 30, 0, 330, 300, 270, 240, 210])
     tick_labels = np.remainder(tick_labels + 360 + rot, 360)
     tick_labels = np.array(['{0}°'.format(l) for l in tick_labels])
-    ax.set_xticklabels(tick_labels) 
+    ax.set_xticklabels(tick_labels)
 
     ax.set_xlabel('R.A. [deg]')
     ax.set_ylabel('Dec. [deg]')
-    
+
     ax.grid(True)
-    
-    if galactic_plane or ecliptic_plane:   
+
+    if galactic_plane or ecliptic_plane:
         ax.legend(loc='lower right')
     if title!='':
         plt.title(title)
