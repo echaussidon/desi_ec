@@ -101,7 +101,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
 
     if label!=None:
-        ax_cb = inset_axes(ax, width="25%", height="4.5%", loc='lower left', bbox_to_anchor=(0.375, 0.125, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
+        ax_cb = inset_axes(ax, width="30%", height="4%", loc='lower left', bbox_to_anchor=(0.346, -0.15, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
         cb = plt.colorbar(mesh, ax=ax, cax=ax_cb, orientation='horizontal', shrink=0.8, aspect=40)
         cb.set_label(r'[$\#$ $deg^{-2}$]', x=1.25, labelpad=-37)
 
