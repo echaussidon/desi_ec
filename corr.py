@@ -53,7 +53,7 @@ def compute_result(filename) :
     r=np.array(data_xi['R'])
     xi=np.array(data_xi['Xi'])
 
-    err_xi = (1+xi)/np.sqrt(dd) #### double check the computation for the error
+    err_xi = (1+xi)/np.sqrt(dd) ## au premier ordre c'est bien ca (en negliant les termes en alphabeta, beta^2, gamma^2, gammabeta)
     err_r = np.zeros(len(r))/rr
 
     return r, xi, err_r, err_xi
