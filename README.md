@@ -1,4 +1,4 @@
-Usefull function for DESI
+Usefull functions for DESI
 ==========================
 
 This package contains usefull functions/routines for my work in [DESI](https://www.desi.lbl.gov/) (targets selection and clustering analysis with quasars)
