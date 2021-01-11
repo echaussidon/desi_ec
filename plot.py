@@ -78,7 +78,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
 
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide', figsize=(11.0, 7.0)):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37):
 
     #transform healpix map to 2d array
     plt.figure(1)
@@ -103,7 +103,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     if label!=None:
         ax_cb = inset_axes(ax, width="30%", height="4%", loc='lower left', bbox_to_anchor=(0.346, -0.15, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
         cb = plt.colorbar(mesh, ax=ax, cax=ax_cb, orientation='horizontal', shrink=0.8, aspect=40)
-        cb.set_label(r'[$\#$ $deg^{-2}$]', x=1.25, labelpad=-37)
+        cb.set_label(r'[$\#$ $deg^{-2}$]', x=xpad, labelpad=labelpad)
 
     if galactic_plane:
         ra, dec = galactic_plane_icrs.ra.degree - rot, galactic_plane_icrs.dec.degree
