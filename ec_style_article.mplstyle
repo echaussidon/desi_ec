@@ -11,7 +11,7 @@ figure.frameon     : True
 
 figure.subplot.left    : 0.15  # the left side of the subplots of the figure
 figure.subplot.right   : 0.93    # the right side of the subplots of the figure
-figure.subplot.bottom  : 0.1   # the bottom of the subplots of the figure
+figure.subplot.bottom  : 0.15   # the bottom of the subplots of the figure
 figure.subplot.top     : 0.95    # the top of the subplots of the figure
 
 ## LINES

@@ -78,7 +78,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
 
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide'):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide', figsize=(11.0, 7.0)):
 
     #transform healpix map to 2d array
     plt.figure(1)
@@ -95,7 +95,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
 
     ra_grid, dec_grid = np.meshgrid(ra_edge, dec_edge)
 
-    plt.figure()
+    plt.figure(figsize=figsize)
     ax = plt.subplot(111, projection=projection)
 
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
