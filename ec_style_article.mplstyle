@@ -43,7 +43,7 @@ grid.alpha     : 0.8
 
 legend.fancybox  : True
 legend.facecolor : white
-legend.fontsize : 10
+legend.fontsize : 8
 
 ## TICKS
 
