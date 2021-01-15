@@ -34,6 +34,7 @@ def _load_systematics_old():
 
     sysdict['FRACAREA_13538'] = [0.01, 1., 'Fraction of pixel area covered for QSOs']
 
+
     return sysdict
 
 def _load_systematics():
@@ -47,6 +48,10 @@ def _load_systematics():
                       'South':[0.001, 0.1, 'E(B-V)', 35],
                       'Des':[0.001, 0.1, 'E(B-V)', 35],
                       'Global':[0.001, 0.1, 'E(B-V)', 30]}
+    sysdict['STREAM'] = {'North':[1, 10, 'Sag. Stream', 5],
+                      'South':[0.001, 5, 'Sag. Stream', 5],
+                      'Des':[0.001, 5, 'Sag. Stream', 5],
+                      'Global':[0.001, 10, 'Sag. Stream', 10]}
 
     sysdict['PSFSIZE_G'] = {'North':[1.3, 2.6, 'PSF Size in g-band', 35],
                             'South':[1.05, 2.1, 'PSF Size in g-band',35],
@@ -104,7 +109,6 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
         bins=feature[ksort[0::nbr_obj_bins]] #Here, get the bins from the data set (needed to be sorted)
         bins=np.append(bins,feature[ksort[-1]]) #add last point
         nbins = bins.size - 1 #OK
-        print(nbins)
     else: # create bin with fix size (depends on the up/downclip value)
         nbr_obj_bins, bins = np.histogram(feature, nbins)
 
