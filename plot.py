@@ -78,7 +78,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
 
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide'):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37, ycb_pos=-0.15):
 
     #transform healpix map to 2d array
     plt.figure(1)
@@ -95,26 +95,28 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
 
     ra_grid, dec_grid = np.meshgrid(ra_edge, dec_edge)
 
-    plt.figure()
+    plt.figure(figsize=figsize)
     ax = plt.subplot(111, projection=projection)
+    plt.subplots_adjust(left=0.14, bottom=0.23, right=0.96, top=0.96)
 
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
 
     if label!=None:
-        ax_cb = inset_axes(ax, width="30%", height="4%", loc='lower left', bbox_to_anchor=(0.346, -0.15, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
+        ax_cb = inset_axes(ax, width="30%", height="4%", loc='lower left', bbox_to_anchor=(0.346, ycb_pos, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
         cb = plt.colorbar(mesh, ax=ax, cax=ax_cb, orientation='horizontal', shrink=0.8, aspect=40)
-        cb.set_label(r'[$\#$ $deg^{-2}$]', x=1.25, labelpad=-37)
+        cb.outline.set_visible(False)
+        cb.set_label(r'[$\#$ $deg^{-2}$]', x=xpad, labelpad=labelpad)
 
     if galactic_plane:
         ra, dec = galactic_plane_icrs.ra.degree - rot, galactic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
-        ax.plot(np.radians(ra[index_galactic]), np.radians(dec[index_galactic]), linestyle='-', color='black', label='Galactic plane')
+        ax.plot(np.radians(ra[index_galactic]), np.radians(dec[index_galactic]), linestyle='-', linewidth=0.8, color='black', label='Galactic plane')
     if ecliptic_plane:
         ra, dec = ecliptic_plane_icrs.ra.degree - rot, ecliptic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
-        ax.plot(np.radians(ra[index_ecliptic]), np.radians(dec[index_ecliptic]), linestyle=':', color='navy', label='Ecliptic plane')
+        ax.plot(np.radians(ra[index_ecliptic]), np.radians(dec[index_ecliptic]), linestyle=':', linewidth=0.8, color='navy', label='Ecliptic plane')
 
     tick_labels = np.array([150, 120, 90, 60, 30, 0, 330, 300, 270, 240, 210])
     tick_labels = np.remainder(tick_labels + 360 + rot, 360)
