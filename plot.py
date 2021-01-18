@@ -105,7 +105,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
         ax_cb = inset_axes(ax, width="30%", height="4%", loc='lower left', bbox_to_anchor=(0.346, ycb_pos, 1.0, 1.0), bbox_transform=ax.transAxes, borderpad=0)
         cb = plt.colorbar(mesh, ax=ax, cax=ax_cb, orientation='horizontal', shrink=0.8, aspect=40)
         cb.outline.set_visible(False)
-        cb.set_label(r'[$\#$ $deg^{-2}$]', x=xpad, labelpad=labelpad)
+        cb.set_label(label, x=xpad, labelpad=labelpad)
 
     if galactic_plane:
         ra, dec = galactic_plane_icrs.ra.degree - rot, galactic_plane_icrs.dec.degree
