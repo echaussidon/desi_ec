@@ -78,7 +78,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
 
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37, ycb_pos=-0.15):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, show_legend=True, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37, ycb_pos=-0.15):
 
     #transform healpix map to 2d array
     plt.figure(1)
@@ -128,7 +128,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
 
     ax.grid(True)
 
-    if galactic_plane or ecliptic_plane:
+    if show_legend:
         ax.legend(loc='lower right')
     if title!='':
         plt.title(title)
