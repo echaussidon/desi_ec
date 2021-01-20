@@ -32,7 +32,7 @@ def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_
     ascii.write([ra_list[sel], dec_list[sel], z[sel], pixmap[sel]],
                  filename , names=['ra', 'dec', 'z', 'w'],
                  format='no_header', overwrite=True)
-    
+
 def au_dd(filename):
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 
@@ -58,11 +58,11 @@ def compute_result(filename) :
 
     return r, xi, err_r, err_xi
 
-def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markerfacecolor=None, label=None, alpha=1, min_theta=0.05):
+def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05):
     r, xi, err_r, err_xi = compute_result(filename=filename)
     sel = (r>min_theta) & (xi>0.0)
     if err_y==False:
         yerr = None
     else:
         yerr = err_xi[sel]
-    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=6, markerfacecolor=markerfacecolor, linestyle=linestyle, color=color, label=label, alpha=alpha)
+    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
