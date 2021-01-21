@@ -27,12 +27,12 @@ def get_ra_dec(Nside):
 def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_z=1.6):
     z = np.ones(pixmap.size)*mean_z
     sel = (pixmap != 0) #We remove pixel with nothing inside...
-    print('Number of pix selected (non-zeros) in pixmap =', np.sum(sel))
+    print(f'Number of pix selected (non-zeros) in pixmap = {np.sum(sel)}\nsaved in {filename}')
 
     ascii.write([ra_list[sel], dec_list[sel], z[sel], pixmap[sel]],
                  filename , names=['ra', 'dec', 'z', 'w'],
                  format='no_header', overwrite=True)
-    
+
 def au_dd(filename):
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 

@@ -116,10 +116,14 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     wbin = np.digitize(feature, bins, right=True)
 
     # build normalized targets : the normalization is done by the median density
-    norm_targets = targets/np.nanmedian(targets)
+    #norm_targets = targets/np.nanmedian(targets)
+    norm_targets = targets/np.nanmean(targets)
+    
+    print("ATTENTION ON UTILISE MEAN ")
 
     # digitization of the normalized target density values (first digitized bin is 1 not zero)
-    meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+    #meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+    meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
 
     # error for mean (estimation of the std from sample)
     err_meds = [np.nanstd(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else 0 for bin in range(1, nbins+1)]
