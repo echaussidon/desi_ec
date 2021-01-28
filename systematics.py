@@ -48,10 +48,10 @@ def _load_systematics():
                       'South':[0.001, 0.1, 'E(B-V)', 35],
                       'Des':[0.001, 0.1, 'E(B-V)', 35],
                       'Global':[0.001, 0.1, 'E(B-V)', 30]}
-    sysdict['STREAM'] = {'North':[1, 10, 'Sag. Stream', 5],
-                      'South':[0.001, 5, 'Sag. Stream', 5],
-                      'Des':[0.001, 5, 'Sag. Stream', 5],
-                      'Global':[0.001, 10, 'Sag. Stream', 10]}
+    sysdict['STREAM'] = {'North':[0., 1., 'Sgr. Stream', 1],
+                      'South':[0.01, 1.5, 'Sgr. Stream', 20],
+                      'Des':[0.01, 0.6, 'Sgr. Stream', 15],
+                      'Global':[0.01, 1.5, 'Sgr. Stream', 20]}
 
     sysdict['PSFSIZE_G'] = {'North':[1.3, 2.6, 'PSF Size in g-band', 35],
                             'South':[1.05, 2.1, 'PSF Size in g-band',35],
@@ -118,7 +118,7 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     # build normalized targets : the normalization is done by the median density
     #norm_targets = targets/np.nanmedian(targets)
     norm_targets = targets/np.nanmean(targets)
-    
+
     print("ATTENTION ON UTILISE MEAN ")
 
     # digitization of the normalized target density values (first digitized bin is 1 not zero)
