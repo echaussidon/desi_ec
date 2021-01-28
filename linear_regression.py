@@ -23,11 +23,15 @@ class LeastSquares:
         chi2 = np.nansum((self.y[sel] - ym[sel])**2/(self.y_err[sel])**2) + self.regulator*(np.nanmean(ym[sel]) - 1)**2
         return chi2
 
-def regression_least_square(model, regulator, data_x, data_y, data_y_err, nbr_params, **dict_ini):
+def regression_least_square(model, regulator, data_x, data_y, data_y_err, nbr_params, use_minos=False, print_covariance=False, **dict_ini):
     chisq = LeastSquares(model, regulator, data_x, data_y, data_y_err)
     m = Minuit(chisq, print_level=1, forced_parameters=[f"a{i}" for i in range(0, nbr_params)], **dict_ini)
     m.migrad()
     print(m.get_param_states())
+    if use_minos:
+        print(m.minos())
+    if print_covariance:
+        print(repr(m.covariance)) 
     return [m.values[f"a{i}"] for i in range(0, nbr_params)]
 
 
