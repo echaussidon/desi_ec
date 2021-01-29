@@ -49,7 +49,7 @@ def _load_systematics():
                       'Des':[0.001, 0.1, 'E(B-V)', 35],
                       'Global':[0.001, 0.1, 'E(B-V)', 30]}
     sysdict['STREAM'] = {'North':[0., 1., 'Sgr. Stream', 1],
-                      'South':[0.01, 1.5, 'Sgr. Stream', 20],
+                      'South':[0.01, 1., 'Sgr. Stream', 20],
                       'Des':[0.01, 0.6, 'Sgr. Stream', 15],
                       'Global':[0.01, 1.5, 'Sgr. Stream', 20]}
 
@@ -89,7 +89,7 @@ def _load_systematics():
                               'Global':[0.0, 7.0, 'PSF Depth in W2-band',30]}
     return sysdict
 
-def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upclip=None, nbins=50, adaptative_binning=False, nobjects_by_bins=1000):
+def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upclip=None, nbins=50, use_mean=True, adaptative_binning=False, nobjects_by_bins=1000):
     """
     Return binmid, meds pour pouvoir faire : plt.errorbar(binmid, meds - 1*np.ones(binmid.size), yerr=meds_err, marker='.', linestyle='-', lw=0.9)
     """
@@ -115,15 +115,15 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     # find in which bins belong each feature value
     wbin = np.digitize(feature, bins, right=True)
 
-    # build normalized targets : the normalization is done by the median density
-    #norm_targets = targets/np.nanmedian(targets)
-    norm_targets = targets/np.nanmean(targets)
+    if use_mean:
+        norm_targets = targets/np.nanmean(targets)
+        meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+    else:
+        # build normalized targets : the normalization is done by the median density
+        norm_targets = targets/np.nanmedian(targets)
+        # digitization of the normalized target density values (first digitized bin is 1 not zero)
+        meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
 
-    print("ATTENTION ON UTILISE MEAN ")
-
-    # digitization of the normalized target density values (first digitized bin is 1 not zero)
-    #meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
-    meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
 
     # error for mean (estimation of the std from sample)
     err_meds = [np.nanstd(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else 0 for bin in range(1, nbins+1)]

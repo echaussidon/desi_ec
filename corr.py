@@ -58,9 +58,50 @@ def compute_result(filename) :
 
     return r, xi, err_r, err_xi
 
-def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05):
+def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nbins=20): #on fait ca avec un binning en log scale
+    xi_interp = interpolate.interp1d(r, xi)
+    err_r_interp = interpolate.interp1d(r, err_r)
+    err_xi_interp = interpolate.interp1d(r, err_xi)
+
+    bins = np.logspace(np.log10(min_theta),np.log10(max_theta), nbins)
+
+    r, xi, err_r, err_xi = bins, xi_interp(bins), err_r_interp(bins), err_xi_interp(bins)
+
+    return r, xi, err_r, err_xi
+
+def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
     r, xi, err_r, err_xi = compute_result(filename=filename)
-    sel = (r>min_theta) & (xi>0.0)
+    sel = (r>=min_theta) & (r<=max_theta)& (xi>0.0)
+    if err_y==False:
+        yerr = None
+    else:
+        yerr = err_xi
+    if nbins != None:
+        r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
+    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr[sel], marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
+
+def reconstruct_ang_corr(file1, file2, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
+    #We supposed that file2 goes at smaller theta than file1
+    r1, xi1, err_r1, err_xi1 = compute_result(file1)
+    r2, xi2, err_r2, err_xi2 = compute_result(file2)
+
+    r = np.concatenate((r2[r2<=split_theta], r1[r1 > split_theta]))
+    xi = np.concatenate((xi2[r2<=split_theta], xi1[r1 > split_theta]))
+    err_r = np.concatenate((err_r2[r2<=split_theta], err_r1[r1 > split_theta]))
+    err_xi = np.concatenate((err_xi2[r2<=split_theta], err_xi1[r1 > split_theta]))
+
+    if nbins != None:
+        r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
+
+    sel = (r >= min_theta) & (r<= max_theta)
+    r, xi, err_r, err_xi = r[sel], xi[sel], err_r[sel], err_xi[sel]
+
+    return r, xi, err_r, err_xi
+
+def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
+    #We supposed that file2 goes at smaller theta than file1
+    r, xi, err_r, err_xi = reconstruct_ang_corr(file1, file2, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
+    sel = (xi>0.0)
     if err_y==False:
         yerr = None
     else:
