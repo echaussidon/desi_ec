@@ -6,6 +6,7 @@ import healpy as hp
 import fitsio
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy import interpolate
 
 from astropy.io import ascii
 
