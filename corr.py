@@ -72,14 +72,15 @@ def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nb
 
 def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
     r, xi, err_r, err_xi = compute_result(filename=filename)
+    if nbins != None:
+        r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
+
     sel = (r>=min_theta) & (r<=max_theta)& (xi>0.0)
     if err_y==False:
         yerr = None
     else:
-        yerr = err_xi
-    if nbins != None:
-        r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
-    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr[sel], marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
+        yerr = err_xi[sel]
+    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
 
 def reconstruct_ang_corr(file1, file2, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
     #We supposed that file2 goes at smaller theta than file1
