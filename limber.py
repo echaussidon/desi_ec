@@ -68,11 +68,11 @@ def limber(theta, *param):
 
     return (r0**gamma) * np.sqrt(np.pi) * integral * (np.deg2rad(theta))**(1-gamma) * special.gamma((gamma-1.0)/2.) / special.gamma(gamma/2.)
 
-def plot_limber(ax, r0, gamma, color=None, linestyle='--', alpha=1, label=None, min_theta=0.01, max_theta=1):
-    if label == None:
-        label = '({:.2f}, {:.2f})'.format(r0, gamma)
+def plot_limber(ax, r0, gamma, color=None, linestyle='--', linewidth=1, alpha=1, label='', label_param=True, min_theta=0.01, max_theta=1):
+    if label_param:
+        label = f'{label} ({r0:.2f}, {gamma:.2f})'
     x = np.logspace(np.log10(min_theta),np.log10(max_theta), 1000)
-    ax.plot(x, limber(x, r0, gamma), color=color, linestyle=linestyle, label=label, alpha=alpha)
+    ax.plot(x, limber(x, r0, gamma), color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha)
 
 def Fit_Limber(r, xi, err_xi, r_min=0.01, r_max=0.6, use_minos=False, print_covariance=True):
     #attention ici: r_min et r_max sont en degree !
@@ -91,9 +91,9 @@ def Fit_Limber(r, xi, err_xi, r_min=0.01, r_max=0.6, use_minos=False, print_cova
 
     return param
 
-def limber_from_cute(filename, ax=None, color=None, linestyle='--', marker=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.001, max_theta=1.0, use_minos=False, print_covariance=True):
+def limber_from_cute(filename, ax=None, color=None, linestyle='--', linewidth=1, marker=None, markerfacecolor=None, label='', alpha=1, min_theta=0.001, max_theta=1.0, label_param=True, use_minos=False, print_covariance=True):
     r, xi, err_r, err_xi = compute_result(filename=filename)
-    par = Fit_Limber(r, xi, err_xi, min_theta, use_minos, print_covariance)
+    par = Fit_Limber(r, xi, err_xi, min_theta, max_theta, use_minos, print_covariance)
 
     if ax != None:
-        plot_limber(ax, par[0], par[1], color=color, linestyle=linestyle, alpha=alpha, label=label, min_theta=min_theta, max_theta=max_theta)
+        plot_limber(ax, par[0], par[1], color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, label=label, label_param=True, min_theta=min_theta, max_theta=max_theta)
