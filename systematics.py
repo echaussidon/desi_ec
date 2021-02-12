@@ -1,5 +1,9 @@
 import numpy as np
 
+def f(x) : return 22.5 - 2.5*np.log10(5/np.sqrt(x))
+
+def g(y) : return 25*10**(2*(y - 22.5)/2.5)
+
 def _load_systematics_old():
     """
     Loads information for making systematics plots. Copy and adapt from desitarget
@@ -46,7 +50,7 @@ def _load_systematics():
                            'Global':[150., 4000., 'log10(Stellar Density) per sq. deg.', 30]}
     sysdict['EBV'] = {'North':[0.001, 0.1, 'E(B-V)', 35],
                       'South':[0.001, 0.1, 'E(B-V)', 35],
-                      'Des':[0.001, 0.1, 'E(B-V)', 35],
+                      'Des':[0.001, 0.09, 'E(B-V)', 35],
                       'Global':[0.001, 0.1, 'E(B-V)', 30]}
     sysdict['STREAM'] = {'North':[0., 1., 'Sgr. Stream', 1],
                       'South':[0.01, 1., 'Sgr. Stream', 20],
@@ -54,39 +58,39 @@ def _load_systematics():
                       'Global':[0.01, 1.5, 'Sgr. Stream', 20]}
 
     sysdict['PSFSIZE_G'] = {'North':[1.3, 2.6, 'PSF Size in g-band', 35],
-                            'South':[1.05, 2.1, 'PSF Size in g-band',35],
-                            'Des':[1.15, 1.6, 'PSF Size in g-band',20],
+                            'South':[1.1, 2.02, 'PSF Size in g-band', 35],
+                            'Des':[1.19, 1.7, 'PSF Size in g-band',30],
                             'Global':[0., 3., 'PSF Size in g-band', 30]}
-    sysdict['PSFSIZE_R'] ={'North':[1.25, 2.52, 'PSF Size in r-band',40],
-                           'South':[1., 1.9, 'PSF Size in r-band',30],
-                           'Des':[1.08, 1.4, 'PSF Size in r-band',15],
+    sysdict['PSFSIZE_R'] ={'North':[1.25, 2.4, 'PSF Size in r-band', 40],
+                           'South':[0.95, 1.92, 'PSF Size in r-band', 30],
+                           'Des':[1.05, 1.5, 'PSF Size in r-band',30],
                            'Global':[0., 3., 'PSF Size in r-band', 30]}
-    sysdict['PSFSIZE_Z'] = {'North':[0.9, 1.8, 'PSF Size in z-band',35],
-                            'South':[0.9, 1.8, 'PSF Size in z-band',40],
-                            'Des':[0.95, 1.3, 'PSF Size in z-band',20],
+    sysdict['PSFSIZE_Z'] = {'North':[0.9, 1.78, 'PSF Size in z-band', 35],
+                            'South':[0.9, 1.85, 'PSF Size in z-band', 40],
+                            'Des':[0.95, 1.4, 'PSF Size in z-band', 30],
                             'Global':[0., 3., 'PSF Size in z-band', 30]}
 
-    sysdict['PSFDEPTH_G'] = {'North':[300., 1600., 'PSF Depth in g-band',30],
-                             'South':[600., 3800., 'PSF Depth in g-band',35],
-                             'Des':[1500., 5500., 'PSF Depth in g-band',25],
+    sysdict['PSFDEPTH_G'] = {'North':[300., 1600., 'PSF Depth in g-band', 30],
+                             'South':[750., 4000., 'PSF Depth in g-band', 35],
+                             'Des':[1900., 7000., 'PSF Depth in g-band', 30],
                              'Global':[63., 6300., 'PSF Depth in g-band', 30]}
-    sysdict['PSFDEPTH_R'] = {'North':[70.0, 600., 'PSF Depth in r-band',30],
-                             'South':[270.0, 1500.0, 'PSF Depth in r-band',25],
-                             'Des':[1000., 4000., 'PSF Depth in r-band',20],
+    sysdict['PSFDEPTH_R'] = {'North':[95., 620., 'PSF Depth in r-band', 30],
+                             'South':[260.0, 1600.0, 'PSF Depth in r-band', 30],
+                             'Des':[1200., 5523., 'PSF Depth in r-band', 30],
                              'Global':[25., 2500., 'PSF Depth in r-band', 30]}
-    sysdict['PSFDEPTH_Z'] ={'North':[50., 260., 'PSF Depth in z-band',40],
-                            'South':[40.0, 360., 'PSF Depth in z-band',40],
-                            'Des':[100., 490.0, 'PSF Depth in z-band',30],
+    sysdict['PSFDEPTH_Z'] ={'North':[60., 275., 'PSF Depth in z-band', 40],
+                            'South':[40.0, 360., 'PSF Depth in z-band', 40],
+                            'Des':[145., 570., 'PSF Depth in z-band', 30],
                             'Global':[4., 400., 'PSF Depth in z-band', 30]}
 
-    sysdict['PSFDEPTH_W1'] = {'North':[2.0, 12.5, 'PSF Depth in W1-band',40],
-                              'South':[2.2, 5.0, 'PSF Depth in W1-band',20],
-                              'Des':[1.9, 4.7, 'PSF Depth in W1-band',20],
-                              'Global':[0.0, 30.0, 'PSF Depth in W1-band',30]}
-    sysdict['PSFDEPTH_W2'] = {'North':[0.55, 3.2, 'PSF Depth in W2-band',40],
-                              'South':[0.629, 1.32, 'PSF Depth in W2-band',20],
-                              'Des':[0.48, 1.3, 'PSF Depth in W2-band',20],
-                              'Global':[0.0, 7.0, 'PSF Depth in W2-band',30]}
+    sysdict['PSFDEPTH_W1'] = {'North':[2.7, 12., 'PSF Depth in W1-band', 40],
+                              'South':[2.28, 5.5, 'PSF Depth in W1-band', 30],
+                              'Des':[2.28, 6.8, 'PSF Depth in W1-band', 30],
+                              'Global':[0.0, 30.0, 'PSF Depth in W1-band', 30]}
+    sysdict['PSFDEPTH_W2'] = {'North':[0.8, 3.9, 'PSF Depth in W2-band', 40],
+                              'South':[0.629, 1.6, 'PSF Depth in W2-band', 30],
+                              'Des':[0.62, 2.25, 'PSF Depth in W2-band', 30],
+                              'Global':[0.0, 7.0, 'PSF Depth in W2-band', 30]}
     return sysdict
 
 def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upclip=None, nbins=50, use_mean=True, adaptative_binning=False, nobjects_by_bins=1000):
