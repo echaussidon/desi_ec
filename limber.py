@@ -84,7 +84,7 @@ def Fit_Limber(r, xi, err_xi, r_min=0.01, r_max=0.6, use_minos=False, print_cova
 
     dict_ini = {'a0': 5, 'a1': 1}
     dict_ini.update({'error_a0' : 0.001, 'error_a1' : 0.001})
-    dict_ini.update({'limit_a0': (0, 10), 'limit_a1': (0, 10)})
+    dict_ini.update({'limit_a0': (0, 20), 'limit_a1': (0, 10)})
     dict_ini.update({'errordef':1}) #for leastsquare
 
     param = regression_least_square(limber, 0.0, r_fit, xi_fit, err_xi_fit, nbr_params, use_minos=use_minos, print_covariance=print_covariance, **dict_ini)
