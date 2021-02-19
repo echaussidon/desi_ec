@@ -113,7 +113,7 @@ def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, lines
     ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
 
 #Ne pas faire de moyenné pondéré car l'erreur dépend de xi .. --> on biase donc notre moyenne :)
-def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, marker='o', linestyle=None,
+def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, marker='o', linestyle=None, markersize=None, linewidth=None, capsize=2,
                        markerfacecolor=None, label=None, min_theta=0.01, max_theta=9.5, nbins=None, return_mean=False, plot=True):
     r, xi_temp, err_r, err_xi_temp = compute_result(filename=filename+str(range[0])+suffixe+'.txt')
     #il faut evidement que les correlations aient le meme binning..
@@ -139,7 +139,7 @@ def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, mar
 
     if plot:
         sel = (xi > 0)
-        ax.errorbar(x=r[sel], y=xi[sel], yerr=err_xi[sel], marker=marker, markersize=4, markerfacecolor=markerfacecolor, linestyle=linestyle, capsize=2, color=color, label=label, alpha=1)
+        ax.errorbar(x=r[sel], y=xi[sel], yerr=err_xi[sel], marker=marker, markersize=markersize, linewidth=linewidth, markerfacecolor=markerfacecolor, linestyle=linestyle, capsize=capsize, color=color, label=label, alpha=1)
 
     if return_mean:
         return r, xi, err_r, err_xi
