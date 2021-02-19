@@ -70,7 +70,8 @@ def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nb
 
     return r, xi, err_r, err_xi
 
-def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
+def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None,
+                  label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
     r, xi, err_r, err_xi = compute_result(filename=filename)
     if nbins != None:
         r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
@@ -100,7 +101,8 @@ def reconstruct_ang_corr(file1, file2, split_theta=0.5, min_theta=1e-3, max_thet
 
     return r, xi, err_r, err_xi
 
-def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
+def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, linestyle='-', marker='.', markersize=6,
+                                 linewidth=None, markerfacecolor=None, label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
     #We supposed that file2 goes at smaller theta than file1
     r, xi, err_r, err_xi = reconstruct_ang_corr(file1, file2, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
     sel = (xi>0.0)
@@ -109,3 +111,35 @@ def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, lines
     else:
         yerr = err_xi[sel]
     ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
+
+#Ne pas faire de moyenné pondéré car l'erreur dépend de xi .. --> on biase donc notre moyenne :)
+def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, marker='o', linestyle=None,
+                       markerfacecolor=None, label=None, min_theta=0.01, max_theta=9.5, nbins=None, return_mean=False, plot=True):
+    r, xi_temp, err_r, err_xi_temp = compute_result(filename=filename+str(range[0])+suffixe+'.txt')
+    #il faut evidement que les correlations aient le meme binning..
+
+    xi_list, err_xi_list = np.zeros((len(range), xi_temp.size)), np.zeros((len(range), err_xi_temp.size))
+    xi_list[0], err_xi_list[0] = xi_temp, err_xi_temp
+
+    for i in range[1:]:
+        _, xi_temp, _, err_xi_temp = compute_result(filename=filename+str(i)+suffixe+'.txt')
+        xi_list[i-1], err_xi_list[i-1] = xi_temp, err_xi_temp
+
+    xi = np.mean(xi_list, axis=0)
+    err_xi = np.std(xi_list, axis=0) / np.sqrt(len(range) - 1)
+
+    if nbins != None:
+        r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
+
+    if err_y == False:
+        err_xi = np.zeros(err_xi.size)
+
+    sel = (r >= min_theta) & (r<= max_theta)
+    r, xi, err_r, err_xi = r[sel], xi[sel], err_r[sel], err_xi[sel]
+
+    if plot:
+        sel = (xi > 0)
+        ax.errorbar(x=r[sel], y=xi[sel], yerr=err_xi[sel], marker=marker, markersize=4, markerfacecolor=markerfacecolor, linestyle=linestyle, capsize=2, color=color, label=label, alpha=1)
+
+    if return_mean:
+        return r, xi, err_r, err_xi
