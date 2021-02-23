@@ -29,11 +29,34 @@ def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_
     z = np.ones(pixmap.size)*mean_z
     sel = (pixmap != 0) #We remove pixel with nothing inside...
     print(f'Number of pix selected (non-zeros) in pixmap = {np.sum(sel)}\nsaved in {filename}')
-
     ascii.write([ra_list[sel], dec_list[sel], z[sel], pixmap[sel]],
                  filename , names=['ra', 'dec', 'z', 'w'],
                  format='no_header', overwrite=True)
 
+#------------------------------------------------------------------------------#
+#Construction des patchs (sous forme de pixel) pour faire jackknife --> footprint = north / south ou des ou ce que l'on veut
+
+def find_rabox_from_decline(radec_box, footprint, Nside):
+    ra1, ra2, dec1, dec2 = radec_box[0], radec_box[1], radec_box[2], radec_box[3]
+    if (ra1>=300) & (ra2 <= 120):
+        zone_tmp = np.array(hp_in_box(Nside, [ra1, 360, dec1, dec2]) + hp_in_box(Nside, [0, ra2, dec1, dec2]))
+    else:
+        zone_tmp = np.array(hp_in_box(Nside, [ra1, ra2, dec1, dec2]))
+    pix_list = zone_tmp[footprint[zone_tmp] == 1]
+    ra_list, _ = hp.pix2ang(Nside, pix_list, nest=True, lonlat=True)
+    ra_list[ra_list >= 300] = ra_list[ra_list >= 300] - 360
+    return np.floor(np.min(ra_list)) + 360, np.ceil(np.max(ra_list))
+
+def add_zone(radec_box, footprint, Nside):
+    ra1, ra2, dec1, dec2 = radec_box[0], radec_box[1], radec_box[2], radec_box[3]
+    if (ra1>=300) & (ra2 <= 120):
+        zone_tmp = np.array(hp_in_box(Nside, [ra1, 360, dec1, dec2]) + hp_in_box(Nside, [0, ra2, dec1, dec2]))
+    else:
+        zone_tmp = np.array(hp_in_box(Nside, [ra1, ra2, dec1, dec2]))
+    return [zone_tmp[footprint[zone_tmp] == 1]]
+
+
+#------------------------------------------------------------------------------#
 def au_dd(filename):
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 
