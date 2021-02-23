@@ -46,7 +46,10 @@ def find_rabox_from_decline(radec_box, footprint, Nside):
     pix_list = zone_tmp[footprint[zone_tmp] == 1]
     ra_list, _ = hp.pix2ang(Nside, pix_list, nest=True, lonlat=True)
     ra_list[ra_list >= 300] = ra_list[ra_list >= 300] - 360
-    return np.floor(np.min(ra_list)) + 360, np.ceil(np.max(ra_list))
+    ra_min, ra_max = np.floor(np.min(ra_list)), np.ceil(np.max(ra_list))
+    if ra_min < 0:
+        ra_min += 360
+    return ra_min, ra_max
 
 def add_zone(radec_box, footprint, Nside):
     ra1, ra2, dec1, dec2 = radec_box[0], radec_box[1], radec_box[2], radec_box[3]
