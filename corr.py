@@ -37,29 +37,24 @@ def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_
 #------------------------------------------------------------------------------#
 #Construction des patchs (sous forme de pixel) pour faire jackknife --> footprint = north / south ou des ou ce que l'on veut
 
-def find_rabox_from_decline(radec_box, footprint, Nside):
-    ra1, ra2, dec1, dec2 = radec_box[0], radec_box[1], radec_box[2], radec_box[3]
-    if (ra1>=300) & (ra2 <= 120):
-        zone_tmp = np.array(hp_in_box(Nside, [ra1, 360, dec1, dec2]) + hp_in_box(Nside, [0, ra2, dec1, dec2]))
-    else:
-        zone_tmp = np.array(hp_in_box(Nside, [ra1, ra2, dec1, dec2]))
+def find_rabox_from_decline(dec_1, dec_2, footprint, Nside, is_des):
+    zone_tmp = np.array(hp_in_box(Nside, [0, 360, dec_1, dec_2]))
     pix_list = zone_tmp[footprint[zone_tmp] == 1]
     ra_list, _ = hp.pix2ang(Nside, pix_list, nest=True, lonlat=True)
-    ra_list[ra_list >= 300] = ra_list[ra_list >= 300] - 360
+    if is_des: ra_list[ra_list>300] = ra_list[ra_list>300] - 360
     ra_min, ra_max = np.floor(np.min(ra_list)), np.ceil(np.max(ra_list))
-    if ra_min < 0:
-        ra_min += 360
+    if is_des: ra_min += 360
     return ra_min, ra_max
 
 def add_zone(radec_box, footprint, Nside):
     ra1, ra2, dec1, dec2 = radec_box[0], radec_box[1], radec_box[2], radec_box[3]
-    if (ra1>=300) & (ra2 <= 120):
-        zone_tmp = np.array(hp_in_box(Nside, [ra1, 360, dec1, dec2]) + hp_in_box(Nside, [0, ra2, dec1, dec2]))
+    if (ra1>300) & (ra2<100):
+        zone_tmp = np.array(hp_in_box(Nside, [ra1, 360, dec1, dec2])+ hp_in_box(Nside, [0, ra2, dec1, dec2]))
     else:
         zone_tmp = np.array(hp_in_box(Nside, [ra1, ra2, dec1, dec2]))
     return [zone_tmp[footprint[zone_tmp] == 1]]
 
-def build_patch(dec_min, dec_max, nsplit_dec, ra_min, ra_max, nsplit_ra_list, footprint, Nside, print_info):
+def build_patch(dec_min, dec_max, nsplit_dec, nsplit_ra_list, footprint, Nside, is_des, print_info):
     width_dec = (dec_max - dec_min)/nsplit_dec
 
     patch_list = []
@@ -67,18 +62,28 @@ def build_patch(dec_min, dec_max, nsplit_dec, ra_min, ra_max, nsplit_ra_list, fo
     for i in range(nsplit_dec):
         dec_1, dec_2 = dec_min + i*width_dec, dec_min + (i+1)*width_dec
         if print_info: print("DEC : ", dec_1, dec_2)
-        ra_tmp_min, ra_tmp_max = find_rabox_from_decline([ra_min, ra_max, dec_1, dec_2], footprint, Nside)
-        width_ra = (ra_tmp_max - ra_tmp_min + 360) / nsplit_ra_list[i]
+        ra_tmp_min, ra_tmp_max = find_rabox_from_decline(dec_1, dec_2, footprint, Nside, is_des)
+        if (ra_tmp_min>300):
+            width_ra = (ra_tmp_max - ra_tmp_min + 360) / nsplit_ra_list[i]
+        else:
+            width_ra = (ra_tmp_max - ra_tmp_min) / nsplit_ra_list[i]
         if print_info: print("RA : ", ra_tmp_min, ra_tmp_max, width_ra)
 
         for j in range(nsplit_ra_list[i]):
             ra_1, ra_2 = (ra_tmp_min + j*width_ra)%360, (ra_tmp_min + (j+1)*width_ra)%360
+            if ra_2 == 0:
+                ra_2 = 360
             if print_info: print('    ** ', ra_1, ra_2)
             radec_box = [ra_1, ra_2, dec_1, dec_2]
             patch_list += add_zone(radec_box, footprint, Nside)
+            if print_info: print('        --> ', len(patch_list[-1]))
         if print_info: print(" ")
 
     return patch_list
+
+#patch_info_north = {'dec_min':32, 'dec_max':90, 'nsplit_dec':10, 'nsplit_ra_list':[10, 10, 10, 10, 10, 10, 10, 10, 10, 10], 'footprint':north, 'Nside':Nside, 'is_des':False, 'print_info':False}
+#patch_info_south = {'dec_min':-18, 'dec_max':34, 'nsplit_dec':10, 'nsplit_ra_list': [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], 'footprint':south, 'Nside':Nside, 'is_des':False, 'print_info':False}
+#patch_info_des = {'dec_min':-65, 'dec_max':5, 'nsplit_dec':10, 'nsplit_ra_list':[12, 12, 15, 15, 10, 10, 10, 6, 5, 5], 'footprint':des, 'Nside':Nside, 'is_des':True, 'print_info':False}
 
 #------------------------------------------------------------------------------#
 def au_dd(filename):
