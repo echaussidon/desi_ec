@@ -56,10 +56,10 @@ def add_zone(radec_box, footprint, Nside):
         zone_tmp = np.array(hp_in_box(Nside, [ra1, ra2, dec1, dec2]))
     return [zone_tmp[footprint[zone_tmp] == 1]]
 
-def build_patch(dec_min, dec_max, nsplit_dec, ra_min, ra_max, nsplit_ra_list, footprint, print_info):
+def build_patch(dec_min, dec_max, nsplit_dec, ra_min, ra_max, nsplit_ra_list, footprint, Nside, print_info):
     width_dec = (dec_max - dec_min)/nsplit_dec
 
-    zone_list = []
+    patch_list = []
 
     for i in range(nsplit_dec):
         dec_1, dec_2 = dec_min + i*width_dec, dec_min + (i+1)*width_dec
@@ -67,12 +67,15 @@ def build_patch(dec_min, dec_max, nsplit_dec, ra_min, ra_max, nsplit_ra_list, fo
         ra_tmp_min, ra_tmp_max = find_rabox_from_decline([ra_min, ra_max, dec_1, dec_2], footprint, Nside)
         width_ra = (ra_tmp_max - ra_tmp_min + 360) / nsplit_ra_list[i]
         if print_info: print("RA : ", ra_tmp_min, ra_tmp_max, width_ra)
+
         for j in range(nsplit_ra_list[i]):
             ra_1, ra_2 = (ra_tmp_min + j*width_ra)%360, (ra_tmp_min + (j+1)*width_ra)%360
             if print_info: print('    ** ', ra_1, ra_2)
             radec_box = [ra_1, ra_2, dec_1, dec_2]
-            zone_list += add_zone(radec_box, footprint, Nside)
+            patch_list += add_zone(radec_box, footprint, Nside)
         if print_info: print(" ")
+
+    return patch_list
 
 #------------------------------------------------------------------------------#
 def au_dd(filename):
