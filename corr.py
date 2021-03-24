@@ -36,7 +36,7 @@ def save_data(Nside, pixmap, ra_list=None, dec_list=None, filename='oups', mean_
                  format='no_header', overwrite=True)
 
 #------------------------------------------------------------------------------#
-#Construction des patchs (sous forme de pixel) pour faire jackknife --> footprint = north / south ou des ou ce que l'on veut
+#Construction des patchs (sous forme de pixel) pour faire jackknife or subsampling
 
 def find_rabox_from_decline(dec_1, dec_2, footprint, Nside, is_des):
     zone_tmp = np.array(hp_in_box(Nside, [0, 360, dec_1, dec_2]))
