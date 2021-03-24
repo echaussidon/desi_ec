@@ -1,5 +1,6 @@
 # coding: utf-8
 # Author : Edmond Chaussidon (CEA)
+# Fonctions utiles pour le calcul de la fonction de correlation angulaire 2 points
 
 import numpy as np
 import healpy as hp
