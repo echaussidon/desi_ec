@@ -58,7 +58,7 @@ def save_catalog_txt(catalog, selection, filename):
 
 def CUTE_ini_file(param):
     if 'ini_filename' in param.keys():
-        print(f"\n[INFO] Write {param['ini_filename']} for CUTE\n")
+        print(f"\n[INFO] Write {param['ini_filename']}")
         file = open(param['ini_filename'], "w") # overwrite
         file.write("# input-output files and parameters\n")
     else:
@@ -130,9 +130,11 @@ def CUTE_ini_file(param):
     file.close()
 
 
-def CUTE(cute_ini, nbr_nodes=4, nbr_threads=16, keep_trace_txt='output_cute.txt'):
-    print(f"\n[INFO] RUN CUTE for {cute_ini} with {nbr_nodes} nodes and {nbr_thread} threads. Terminal ouput is saved in {keep_trace_txt}\n")
-    CUTE_CALL = f'mpiexec -np {nbr_nodes} /global/homes/e/edmondc/Software/CUTE/CUTE/CUTE {cute_ini}'
+def CUTE(param, nbr_nodes=4, nbr_threads=16, keep_trace_txt='output_cute.txt'):
+    CUTE_ini_file(param)
+    cute_ini = param['ini_filename']
+    print(f"[INFO] RUN CUTE ({param['corr_type']}) for {cute_ini} with {nbr_nodes} nodes and {nbr_threads} threads. Terminal ouput is saved in {keep_trace_txt}\n")
+    CUTE_CALL = f'mpiexec -np {nbr_nodes} /global/homes/e/edmondc/Software/CUTE/CUTE/CUTE  {cute_ini}'
     os.system(f"module load openmpi && module load gsl && export OMP_NUM_THREADS={nbr_threads} && {CUTE_CALL} |& tee {keep_trace_txt}")
 
 
@@ -153,5 +155,5 @@ def extract_cute_result(filename, return_dd=False) : #ok angular and the monopol
 
     if return_dd:
         return r, xi, err_r, err_xi, dd, rr, dr, rd, rr
-
-return r, xi, err_r, err_xi
+    else:
+        return r, xi, err_r, err_xi
