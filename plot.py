@@ -84,22 +84,26 @@ def sgr_to_galactic():
 
 # On definit les plans ici :
 
-galactic_plane = SkyCoord(l=np.linspace(0, 2*np.pi, 200)*u.radian, b=np.zeros(200)*u.radian, frame='galactic', distance=1*u.Mpc)
-galactic_plane_icrs = galactic_plane.transform_to('icrs')
+galactic_plane_tmp = SkyCoord(l=np.linspace(0, 2*np.pi, 200)*u.radian, b=np.zeros(200)*u.radian, frame='galactic', distance=1*u.Mpc)
+galactic_plane_icrs = galactic_plane_tmp.transform_to('icrs')
 index_galactic = np.argsort(galactic_plane_icrs.ra.wrap_at(300*u.deg).degree)
 
-ecliptic_plane = SkyCoord(lon=np.linspace(0, 2*np.pi, 200)*u.radian, lat=np.zeros(200)*u.radian, distance=1*u.Mpc, frame='heliocentrictrueecliptic')
-ecliptic_plane_icrs = ecliptic_plane.transform_to('icrs')
+ecliptic_plane_tmp = SkyCoord(lon=np.linspace(0, 2*np.pi, 200)*u.radian, lat=np.zeros(200)*u.radian, distance=1*u.Mpc, frame='heliocentrictrueecliptic')
+ecliptic_plane_icrs = ecliptic_plane_tmp.transform_to('icrs')
 index_ecliptic = np.argsort(ecliptic_plane_icrs.ra.wrap_at(300*u.deg).degree)
 
-sgr_plane = Sagittarius(Lambda=np.linspace(0, 2*np.pi, 200)*u.radian, Beta=np.zeros(200)*u.radian, distance=1*u.Mpc)
-sgr_plane_icrs = sgr_plane.transform_to(coord.ICRS)
+sgr_plane_tmp = Sagittarius(Lambda=np.linspace(0, 2*np.pi, 200)*u.radian, Beta=np.zeros(200)*u.radian, distance=1*u.Mpc)
+sgr_plane_icrs = sgr_plane_tmp.transform_to(coord.ICRS)
 index_sgr = np.argsort(sgr_plane_icrs.ra.wrap_at(300*u.deg).degree)
 
+sgr_stream_top_icrs = Sagittarius(Lambda=np.linspace(0, 2*np.pi, 200)*u.radian, Beta=20*np.pi/180*np.ones(200)*u.radian, distance=1*u.Mpc).transform_to(coord.ICRS)
+index_sgr_top = np.argsort(sgr_stream_top_icrs.ra.wrap_at(300*u.deg).degree)
+sgr_stream_bottom_icrs = Sagittarius(Lambda=np.linspace(0, 2*np.pi, 200)*u.radian, Beta=-15*np.pi/180*np.ones(200)*u.radian, distance=1*u.Mpc).transform_to(coord.ICRS)
+index_sgr_bottom = np.argsort(sgr_stream_bottom_icrs.ra.wrap_at(300*u.deg).degree)
 
 #-----------------------------------------------------------------------------------------------------#
 
-def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False):
+def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, sgr_plane=False):
     #attention au sens de l'axe en RA ! --> la on le prend normal et on le retourne à la fin :)
     plt.figure(1)
     m = hp.ma(map)
@@ -137,7 +141,7 @@ def plot_cart(map, min=None, max=None, title='', label=r'[$\#$ $deg^{-2}$]', sav
     else:
         plt.close()
 
-def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ deg$^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, sgr_plane=False, show_legend=True, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37, ycb_pos=-0.15):
+def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ deg$^{-2}$]', savename=None, show=True, galactic_plane=False, ecliptic_plane=False, sgr_plane=False, stream_plane=False, show_legend=True, rot=120, projection='mollweide', figsize=(11.0, 7.0), xpad=1.25, labelpad=-37, ycb_pos=-0.15):
 
     #transform healpix map to 2d array
     plt.figure(1)
@@ -175,12 +179,23 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ deg$^{-2}$]', sav
         ra, dec = ecliptic_plane_icrs.ra.degree - rot, ecliptic_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
-        ax.plot(np.radians(ra[index_ecliptic]), np.radians(dec[index_ecliptic]), linestyle=':', linewidth=0.8, color='navy', label='Ecliptic plane')
+        ax.plot(np.radians(ra[index_ecliptic]), np.radians(dec[index_ecliptic]), linestyle=':', linewidth=0.8, color='slategrey', label='Ecliptic plane')
     if sgr_plane:
         ra, dec = sgr_plane_icrs.ra.degree - rot, sgr_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
-        ax.plot(np.radians(ra[index_sgr]), np.radians(dec[index_sgr]), linestyle=':', linewidth=0.8, color='navy', label='Sgr. plane')
+        ax.plot(np.radians(ra[index_sgr]), np.radians(dec[index_sgr]), linestyle='--', linewidth=1.0, color='navy', label='Sgr. plane')
+        
+        if stream_plane:
+            ra, dec = sgr_stream_top_icrs.ra.degree - rot, sgr_stream_top_icrs.dec.degree
+            ra[ra>180] -=360    # scale conversion to [-180, 180]
+            ra=-ra              # reverse the scale: East to the left
+            ax.plot(np.radians(ra[index_sgr_top]), np.radians(dec[index_sgr_top]), linestyle=':', linewidth=1.0, color='navy')
+
+            ra, dec = sgr_stream_bottom_icrs.ra.degree - rot, sgr_stream_bottom_icrs.dec.degree
+            ra[ra>180] -=360    # scale conversion to [-180, 180]
+            ra=-ra              # reverse the scale: East to the left
+            ax.plot(np.radians(ra[index_sgr_bottom]), np.radians(dec[index_sgr_bottom]), linestyle=':', linewidth=1.0, color='navy')
 
     tick_labels = np.array([150, 120, 90, 60, 30, 0, 330, 300, 270, 240, 210])
     tick_labels = np.remainder(tick_labels + 360 + rot, 360)
