@@ -44,13 +44,34 @@ def make_selection(darray, criterions):
     return sel
 
 
-def save_catalog_txt(catalog, selection, filename):
-    # for the moment weight are on but has to be changed
-
+def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=None, use_weight='from_cat', add_weight=None, filename='oups.fits'):
+    """Create catalog [RA, DEC, Z, WEIGHT] in .txt format.
+    Parameters
+    ----------
+    catalog      : catalog containing RA, DEC (Z, WEIGHT) columns
+    selection    : boolean array to select which objects is saved
+    use_redshift : 'from_cat' -- 'from_add'
+    add_redshift : redshift array for 'from_add'
+    use_weight   : 'from_cat' -- 'from_add' -- 'from_one'
+    add_weight   : weight array  for 'from_add'
+    filename     : filename for the .txt file
+    """
+    
     ra = catalog['RA'][:][selection]
     dec = catalog['DEC'][:][selection]
-    z = catalog['Z'][:][selection]
-    weight = np.ones(selection.sum())
+
+    if use_redshift == 'from_cat':
+        z = catalog['Z'][:][selection]
+    else:
+        z = add_redshift[selection]
+
+    if use_weight == 'from_cat':
+        weight = catalog['WEIGHT'][:][selection]
+    elif use_weight == 'from_add':
+        weight = add_weight[selection]
+    else:
+        weight = np.ones(selection.sum())
+        
     ascii.write([ra, dec, z, weight], filename , names=['ra', 'dec', 'z', 'w'],
                 format='no_header', overwrite=True)
     print(f"[INFO] Write catalog in {filename} with {ra.size} points")
