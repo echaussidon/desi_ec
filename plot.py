@@ -184,18 +184,18 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ deg$^{-2}$]', sav
         ra, dec = sgr_plane_icrs.ra.degree - rot, sgr_plane_icrs.dec.degree
         ra[ra>180] -=360    # scale conversion to [-180, 180]
         ra=-ra              # reverse the scale: East to the left
-        ax.plot(np.radians(ra[index_sgr]), np.radians(dec[index_sgr]), linestyle='--', linewidth=1.0, color='navy', label='Sgr. plane')
-        
+        ax.plot(np.radians(ra[index_sgr]), np.radians(dec[index_sgr]), linestyle='--', linewidth=0.8, color='navy', label='Sgr. plane')
+
         if stream_plane:
             ra, dec = sgr_stream_top_icrs.ra.degree - rot, sgr_stream_top_icrs.dec.degree
             ra[ra>180] -=360    # scale conversion to [-180, 180]
             ra=-ra              # reverse the scale: East to the left
-            ax.plot(np.radians(ra[index_sgr_top]), np.radians(dec[index_sgr_top]), linestyle=':', linewidth=1.0, color='navy')
+            ax.plot(np.radians(ra[index_sgr_top]), np.radians(dec[index_sgr_top]), linestyle=':', linewidth=0.8, color='navy')
 
             ra, dec = sgr_stream_bottom_icrs.ra.degree - rot, sgr_stream_bottom_icrs.dec.degree
             ra[ra>180] -=360    # scale conversion to [-180, 180]
             ra=-ra              # reverse the scale: East to the left
-            ax.plot(np.radians(ra[index_sgr_bottom]), np.radians(dec[index_sgr_bottom]), linestyle=':', linewidth=1.0, color='navy')
+            ax.plot(np.radians(ra[index_sgr_bottom]), np.radians(dec[index_sgr_bottom]), linestyle=':', linewidth=0.8, color='navy')
 
     tick_labels = np.array([150, 120, 90, 60, 30, 0, 330, 300, 270, 240, 210])
     tick_labels = np.remainder(tick_labels + 360 + rot, 360)
