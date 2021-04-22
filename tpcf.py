@@ -6,8 +6,48 @@ import sys
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 import fitsio
 from astropy.io import ascii
+
+from wrapper import time_measurement
+from scipy import interpolate
+import scipy.stats as stats
+
+
+#------------------------------------------------------------------------------#
+@time_measurement
+def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_result=False):
+    np.random.seed(seed=2207) # to fix the randomness
+    
+    lb, hb = x_posterior[0], x_posterior[-1] # lower and upper bound
+    f = interpolate.interp1d(x_posterior, y_posterior) # f is the posterior distribution
+    
+    def estimation_MCMC_unif(init, t_max):
+        # Metropolis Hastings sampling from the posterior distribution
+        # Use uniform law to generate new sample (--> can be changed to gaussian)
+        X, ones_vect = init, np.ones(Nsample)
+        y, p = stats.uniform.rvs(loc=lb, scale=hb-lb, size=(init.size, t_max)), np.random.random(size=(init.size, t_max))
+        f_y = f(y)
+
+        for time in range(1,t_max):
+            rho = np.minimum(ones_vect, f_y[:, time]/f(X))
+            value_to_update = p[:, time] < rho
+            X[value_to_update] = y[value_to_update, time]
+        return X
+
+    init = x_posterior.mean()*np.ones(Nsample) # on commence au milieu de X (dans le cas d'une distribution centrée c'est ok sinon faire aleatoire)
+    samples = estimation_MCMC_unif(init, t_max)
+    
+    if show_result:
+        plt.figure(figsize=(5,5))
+        plt.plot(x_posterior, y_posterior, linestyle=':', marker='*', color='red', label='Post')
+        plt.hist(samples, density=1, bins=50, color='blue', range=(0, 4), label='Sample')
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+    
+    return samples
 
 #------------------------------------------------------------------------------#
 def read_fits(filename):
@@ -159,7 +199,7 @@ def CUTE(param, nbr_nodes=4, nbr_threads=16, keep_trace_txt='output_cute.txt'):
     os.system(f"module load openmpi && module load gsl && export OMP_NUM_THREADS={nbr_threads} && {CUTE_CALL} |& tee {keep_trace_txt}")
 
 
-def extract_cute_result(filename, return_dd=False) : #ok angular and the monopole are similar here : --> faire une fonction plus large et reorganiser patch ect .. (mettre dnas limber plutot)
+def extract_cute_result(filename, return_dd=False) : # ok angular and the monopole are similar here : --> faire une fonction plus large et reorganiser patch ect ..
     print("[INFO] Read cute result from ", filename)
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 
