@@ -40,7 +40,7 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
     samples = estimation_MCMC_unif(init, t_max)
     
     if show_result:
-        plt.figure(figsize=(5,5))
+        plt.figure(figsize=(4.5,4.5))
         plt.plot(x_posterior, y_posterior, linestyle=':', marker='*', color='red', label='Post')
         plt.hist(samples, density=1, bins=50, color='blue', range=(0, 4), label='Sample')
         plt.legend()
@@ -191,6 +191,7 @@ def CUTE_ini_file(param):
     file.close()
 
 
+@time_measurement
 def CUTE(param, nbr_nodes=4, nbr_threads=16, keep_trace_txt='output_cute.txt'):
     CUTE_ini_file(param)
     cute_ini = param['ini_filename']

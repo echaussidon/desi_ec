@@ -13,13 +13,16 @@ from astropy.io import ascii
 from desitarget.geomask import hp_in_box
 
 #------------------------------------------------------------------------------#
-def get_data(Nside, catalog_name, add_ra=0, add_dec=0):
+def get_data(Nside, catalog_name, in_deg=False, add_ra=0, add_dec=0):
     pixmap = np.zeros(hp.nside2npix(Nside))
-    print("[READ File :]", catalog_name)
+    print(f"[INFO] Build healpix map with Nside={Nside} from {catalog_name}")
+    print(f"[INFO] The map is in density/deg^2: {in_deg}")
     catalog = fitsio.FITS(catalog_name)[1]['RA', 'DEC']
     pixels = hp.ang2pix(Nside, catalog['RA'][:] + add_ra, catalog['DEC'][:] + add_dec, nest=True, lonlat=True)
     pix, counts = np.unique(pixels, return_counts=True)
     pixmap[pix] = counts
+    if in_deg:
+        pixmap /= hp.nside2pixarea(Nside, degrees=True)
     return pixmap
 
 #a partir d'un Nside, renvoit les positions de chaque pixel (ra, dec) dans l'ordre NESTED
