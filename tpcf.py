@@ -4,6 +4,8 @@
 
 import sys
 import os
+import logging
+logger = logging.getLogger("TPCF")
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,15 +16,16 @@ from wrapper import time_measurement
 from scipy import interpolate
 import scipy.stats as stats
 
+from configparser import ConfigParser
 
 #------------------------------------------------------------------------------#
 @time_measurement
 def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_result=False):
     np.random.seed(seed=2207) # to fix the randomness
-    
+
     lb, hb = x_posterior[0], x_posterior[-1] # lower and upper bound
     f = interpolate.interp1d(x_posterior, y_posterior) # f is the posterior distribution
-    
+
     def estimation_MCMC_unif(init, t_max):
         # Metropolis Hastings sampling from the posterior distribution
         # Use uniform law to generate new sample (--> can be changed to gaussian)
@@ -38,7 +41,7 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
 
     init = x_posterior.mean()*np.ones(Nsample) # on commence au milieu de X (dans le cas d'une distribution centrée c'est ok sinon faire aleatoire)
     samples = estimation_MCMC_unif(init, t_max)
-    
+
     if show_result:
         plt.figure(figsize=(4.5,4.5))
         plt.plot(x_posterior, y_posterior, linestyle=':', marker='*', color='red', label='Post')
@@ -46,12 +49,12 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
         plt.legend()
         plt.tight_layout()
         plt.show()
-    
+
     return samples
 
 #------------------------------------------------------------------------------#
 def read_fits(filename):
-    print('[INFO] Read fits file from : ', filename)
+    logger.info(f'Read fits file from : {filename}')
     return fitsio.FITS(filename)[1]
 
 
@@ -61,7 +64,7 @@ def make_selection(darray, criterions):
 
     def apply_criterion_for_selection(darray, criterion):
         feature_name, operation, value = criterion[0], criterion[1], criterion[2]
-        print("    * ", feature_name, operation, value)
+        logger.info(f"    * {feature_name} {operation} {value}")
         if operation == '==':
             return darray[feature_name] == value
         elif operation == '!=':
@@ -78,7 +81,7 @@ def make_selection(darray, criterions):
             return (darray[feature_name]&2**value) != 0
 
     sel = np.ones(darray.size, dtype=bool)
-    print("[INFO] We apply the selection:")
+    logger.info("We apply the selection:")
     for criterion in criterions:
         sel &= apply_criterion_for_selection(darray, criterion)
     return sel
@@ -96,7 +99,7 @@ def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=N
     add_weight   : weight array  for 'from_add'
     filename     : filename for the .txt file
     """
-    
+
     ra = catalog['RA'][:][selection]
     dec = catalog['DEC'][:][selection]
 
@@ -111,15 +114,16 @@ def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=N
         weight = add_weight[selection]
     else:
         weight = np.ones(selection.sum())
-        
+
     ascii.write([ra, dec, z, weight], filename , names=['ra', 'dec', 'z', 'w'],
                 format='no_header', overwrite=True)
-    print(f"[INFO] Write catalog in {filename} with {ra.size} points")
+    logger.info(f"Write catalog in {filename}")
+    logger.info(f"with {ra.size} points\n")
 
 
-def CUTE_ini_file(param):
+def write_CUTE_ini(param):
     if 'ini_filename' in param.keys():
-        print(f"\n[INFO] Write {param['ini_filename']}")
+        logger.info(f"Write {param['ini_filename']}")
         file = open(param['ini_filename'], "w") # overwrite
         file.write("# input-output files and parameters\n")
     else:
@@ -133,7 +137,7 @@ def CUTE_ini_file(param):
     else:
         sys.exit("MISSING PARAM FOR CUTE INI (randoms_filename)")
     if 'output_with_RR' in param.keys():
-        print(f"[WARNING] We use a previous calculation of RR which is in : {param['output_with_RR']} --> CHECK IF IT IS THE SAME RANDOMS AND THE CUTE PARAMETERS\n")
+        logger.warning(f"We use a previous calculation of RR which is in : {param['output_with_RR']} --> CHECK IF IT IS THE SAME RANDOMS AND THE CUTE PARAMETERS\n")
         file.write(f"RR_filename= {param['output_with_RR']}\n")
     file.write("input_format= 2\n")
     if 'output_filename' in param.keys():
@@ -191,17 +195,30 @@ def CUTE_ini_file(param):
     file.close()
 
 
+def get_CUTE_ini(filename):
+    """
+    Create a configparser from CUTE init file. The output works like a dictionary.
+    """
+    config = ConfigParser()
+    with open(filename) as stream:
+        # Need to add a section to read it with configparser
+        logger.info(f"Read CUTE initial parameters from {filename}")
+        config.read_string("[top]\n" + stream.read())
+    return config['top']
+
+
 @time_measurement
 def CUTE(param, nbr_nodes=4, nbr_threads=16, keep_trace_txt='output_cute.txt'):
-    CUTE_ini_file(param)
+    write_CUTE_ini(param)
     cute_ini = param['ini_filename']
-    print(f"[INFO] RUN CUTE ({param['corr_type']}) for {cute_ini} with {nbr_nodes} nodes and {nbr_threads} threads. Terminal ouput is saved in {keep_trace_txt}\n")
+    logger.info(f"RUN CUTE ({param['corr_type']}) for {cute_ini} with {nbr_nodes} nodes and {nbr_threads} threads.")
+    logger.info(f"Terminal ouput is saved in {keep_trace_txt}")
     CUTE_CALL = f'mpiexec -np {nbr_nodes} /global/homes/e/edmondc/Software/CUTE/CUTE/CUTE  {cute_ini}'
     os.system(f"module load openmpi && module load gsl && export OMP_NUM_THREADS={nbr_threads} && {CUTE_CALL} |& tee {keep_trace_txt}")
 
 
-def extract_cute_result(filename, return_dd=False) : # ok angular and the monopole are similar here : --> faire une fonction plus large et reorganiser patch ect ..
-    print("[INFO] Read cute result from ", filename)
+def extract_cute_result_1D(filename, return_dd=False):
+    logger.info(f"Read CUTE result from {filename}")
     data_xi = ascii.read(filename, format='no_header', names=['R','Xi','DD','DR','RD','RR'])
 
     dd=np.array(data_xi['DD'])
@@ -219,3 +236,43 @@ def extract_cute_result(filename, return_dd=False) : # ok angular and the monopo
         return r, xi, err_r, err_xi, dd, rr, dr, rd, rr
     else:
         return r, xi, err_r, err_xi
+
+
+def extract_cute_result_2D(filename, filename_ini, return_dd=False):
+    param_ini = get_CUTE_ini(filename_ini)
+    nbin_x1, nbin_x2 = int(param_ini['dim1_nbin']), int(param_ini['dim2_nbin'])
+    x1_max, x2_max = float(param_ini['dim1_max']), float(param_ini['dim2_max'])
+
+    logger.info(f"Read CUTE result from {filename}")
+    data_xi = ascii.read(filename, format='no_header', names=['X1', 'X2', 'Xi','DD','DR','RD','RR'])
+
+    x1_grid = data_xi['X1'].reshape(nbin_x1, nbin_x2)
+    x1 = x1_grid[0, :]
+    x2_grid = data_xi['X2'].reshape(nbin_x1, nbin_x2)
+    x2 = x2_grid[:, 0]
+
+    xi = data_xi['Xi'].reshape(nbin_x1, nbin_x2)
+    dd = data_xi['DD'].reshape(nbin_x1, nbin_x2)
+    dr = data_xi['DR'].reshape(nbin_x1, nbin_x2)
+    rd = data_xi['RD'].reshape(nbin_x1, nbin_x2)
+    rr = data_xi['RR'].reshape(nbin_x1, nbin_x2)
+
+    err_xi = (1+xi)/np.sqrt(dd) ## au premier ordre c'est bien ca (en negliant les termes en alphabeta, beta^2, gamma^2, gammabeta)
+    err_xi[np.isinf(err_xi)] = np.NaN
+
+    # attention xi est donnée en xi(x1, x2) --> si on veut afficher xi(x2, x1) --> il faut donc transposer la matrice !
+    #extent = [x2[0], x2[-1], x1[0], x1[-1]]
+
+    if return_dd:
+        return x1_grid, x2_grid, xi, err_xi, dd, dr, rd, rr
+    else:
+        return x1_grid, x2_grid, xi, err_xi
+
+
+def extract_cute_result(filename, filename_ini=None, return_dd=False):
+    if filename[-12:] == 'monopole.txt' or filename[-11:] == 'angular.txt':
+        return extract_cute_result_1D(filename, return_dd)
+    elif filename[-9:] == '3D_ps.txt' or filename[-9:] == '3D_rm.txt':
+        return extract_cute_result_2D(filename, filename_ini, return_dd)
+    else:
+        sys.exit("USE correct filename format (*_corr_type.txt)")

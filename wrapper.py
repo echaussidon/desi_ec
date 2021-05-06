@@ -1,5 +1,8 @@
 import functools
 import time
+import logging
+
+logger = logging.getLogger("wrapper")
 
 #------------------------------------------------------------------------------#
 # TIME
@@ -13,6 +16,6 @@ def time_measurement(func):
         execTime = time.time() - startTime
         mlsec = repr(execTime).split('.')[1][:3]
         readable = time.strftime("%H:%M:%S.{}".format(mlsec), time.gmtime(execTime))
-        print('----> Function "{}" took : {} sec \n'.format(func.__name__, readable))
+        logger.info('----> Function "{}" took : {} sec \n'.format(func.__name__, readable))
         return result
     return wrapper
