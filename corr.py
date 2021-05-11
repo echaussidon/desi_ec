@@ -168,7 +168,27 @@ def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, lines
         yerr = err_xi[sel]
     ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
 
-#Ne pas faire de moyenné pondéré car l'erreur dépend de xi .. --> on biase donc notre moyenne :)
+# pour calculer les erreurs sur les mocks à partir de deux fichiers (un petit et l'autre grande échelle)
+# si qu'un fichier, plot_ang_corr_mean suffit directement!
+def reconstruct_ang_corr_mean(filename, suffixe1, suffixe2, range, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
+    #We supposed that file2 goes at smaller theta than file1
+    r, xi_temp, err_r, err_xi_temp = reconstruct_ang_corr(filename+str(range[0])+suffixe1+'.txt', filename+str(range[0])+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
+    #il faut evidement que les correlations aient le meme binning..
+
+    xi_list, err_xi_list = np.zeros((len(range), xi_temp.size)), np.zeros((len(range), err_xi_temp.size))
+    xi_list[0], err_xi_list[0] = xi_temp, err_xi_temp
+
+    for i in range[1:]:
+        _, xi_temp, _, err_xi_temp = reconstruct_ang_corr(filename+str(i)+suffixe1+'.txt', filename+str(i)+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
+        xi_list[i-1], err_xi_list[i-1] = xi_temp, err_xi_temp
+
+    xi = np.mean(xi_list, axis=0)
+    err_xi = np.std(xi_list, axis=0) / np.sqrt(len(range) - 1)
+
+    return r, xi, err_r, err_xi
+
+
+# Ne pas faire de moyenné pondéré car l'erreur dépend de xi .. --> on biase donc notre moyenne :)
 def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, marker='o', linestyle=None, markersize=None, linewidth=None, capsize=2,
                        markerfacecolor=None, label=None, min_theta=0.01, max_theta=9.5, nbins=None, return_mean=False, plot=True):
     r, xi_temp, err_r, err_xi_temp = compute_result(filename=filename+str(range[0])+suffixe+'.txt')
