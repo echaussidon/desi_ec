@@ -168,24 +168,26 @@ def plot_reconstruction_ang_corr(ax, file1, file2, err_y=True, color=None, lines
         yerr = err_xi[sel]
     ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
 
+
 # pour calculer les erreurs sur les mocks à partir de deux fichiers (un petit et l'autre grande échelle)
 # si qu'un fichier, plot_ang_corr_mean suffit directement!
-def reconstruct_ang_corr_mean(filename, suffixe1, suffixe2, range, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
-    #We supposed that file2 goes at smaller theta than file1
-    r, xi_temp, err_r, err_xi_temp = reconstruct_ang_corr(filename+str(range[0])+suffixe1+'.txt', filename+str(range[0])+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
-    #il faut evidement que les correlations aient le meme binning..
+def compute_error_from_reconstruction_mocks(filename, suffixe1, suffixe2, range, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
+    # We supposed that file2 goes at smaller theta than file1
+    r, xi_temp, _, _ = reconstruct_ang_corr(filename+str(range[0])+suffixe1+'.txt', filename+str(range[0])+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
+    # il faut evidement que les correlations aient le meme binning..
 
-    xi_list, err_xi_list = np.zeros((len(range), xi_temp.size)), np.zeros((len(range), err_xi_temp.size))
-    xi_list[0], err_xi_list[0] = xi_temp, err_xi_temp
+    xi_list = np.zeros((len(range), xi_temp.size))
+    xi_list[0] = xi_temp
 
     for i in range[1:]:
-        _, xi_temp, _, err_xi_temp = reconstruct_ang_corr(filename+str(i)+suffixe1+'.txt', filename+str(i)+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
-        xi_list[i-1], err_xi_list[i-1] = xi_temp, err_xi_temp
+        _, xi_temp, _, _ = reconstruct_ang_corr(filename+str(i)+suffixe1+'.txt', filename+str(i)+suffixe2+'.txt', split_theta=split_theta, min_theta=min_theta, max_theta=max_theta, nbins=nbins)
+        xi_list[i-1] = xi_temp
 
     xi = np.mean(xi_list, axis=0)
-    err_xi = np.std(xi_list, axis=0) / np.sqrt(len(range) - 1)
+    # on multiplie par sqrt(N/(N-1)) pour avoir une erreur non biasee ! cf. https://www.math.u-bordeaux.fr/~mchabano/Agreg/ProbaAgreg1213-COURS2-Stat1.pdf
+    err_xi = np.sqrt(len(range)/(len(range)-1)) * np.std(xi_list, axis=0)
 
-    return r, xi, err_r, err_xi
+    return r, err_xi
 
 
 # Ne pas faire de moyenné pondéré car l'erreur dépend de xi .. --> on biase donc notre moyenne :)
@@ -202,7 +204,8 @@ def plot_ang_corr_mean(ax, filename, suffixe, range, err_y=True, color=None, mar
         xi_list[i-1], err_xi_list[i-1] = xi_temp, err_xi_temp
 
     xi = np.mean(xi_list, axis=0)
-    err_xi = np.std(xi_list, axis=0) / np.sqrt(len(range) - 1)
+    err_xi = np.std(xi_list, axis=0) / np.sqrt(len(range) - 1)  # en realite c'est sqrt(N/(N-1)) * sigma / sqrt(N)
+    # oui c'est l'erreur d'une moyenne cf carnet elle tend forcément vers 0 quand N augmente --> pas la meme chose pour l'erreur que l'on veut grace aux Mocks !
 
     if nbins != None:
         r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
