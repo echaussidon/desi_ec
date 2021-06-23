@@ -16,6 +16,6 @@ def time_measurement(func):
         execTime = time.time() - startTime
         mlsec = repr(execTime).split('.')[1][:3]
         readable = time.strftime("%H:%M:%S.{}".format(mlsec), time.gmtime(execTime))
-        logger.info('----> Function "{}" took : {} sec \n'.format(func.__name__, readable))
+        logger.info('----> Function "{}" took : {} sec'.format(func.__name__, readable))
         return result
     return wrapper
