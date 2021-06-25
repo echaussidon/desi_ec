@@ -16,7 +16,7 @@ figure.subplot.top     : 0.95    # the top of the subplots of the figure
 
 ## LINES
 
-lines.linewidth : 2.0
+lines.linewidth : 1.5
 
 ## AXES
 
@@ -29,7 +29,7 @@ axes.linewidth              : 1.0          # edge linewidth
 axes.labelcolor             : black
 axes.prop_cycle             : cycler(color=['blue', 'red', 'green', 'gold', 'purple', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'gray'])
 axes.formatter.use_mathtext : True # When True, use mathtext for scientific notation
-axes.labelsize : 15
+axes.labelsize : 12
 
 ## GRID
 
@@ -43,17 +43,17 @@ grid.alpha     : 0.8
 
 legend.fancybox  : True
 legend.facecolor : white
-legend.fontsize : 15
+legend.fontsize : 12
 
 ## TICKS
 
 xtick.direction : out
 ytick.direction : out
-xtick.labelsize : 15
-ytick.labelsize : 15
-xtick.major.size     : 5      # major tick size in points
+xtick.labelsize : 12
+ytick.labelsize : 12
+xtick.major.size     : 4      # major tick size in points
 xtick.major.width    : 1      # major tick width in points
-ytick.major.size     : 5      # major tick size in points
+ytick.major.size     : 4      # major tick size in points
 ytick.major.width    : 1      # major tick width in points
 
 
