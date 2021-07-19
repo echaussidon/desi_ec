@@ -4,6 +4,7 @@ Usefull functions for DESI
 This package contains usefull functions/routines for my work in [DESI](https://www.desi.lbl.gov/) (targets selection and clustering analysis with quasars)
 
 **Author:** Edmond Chaussidon (Phd student at IRFU/CEA-Saclay)
+**Contact:** edmond.chaussidon@cea.fr
 
 License :
 ---------
