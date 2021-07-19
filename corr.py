@@ -119,6 +119,8 @@ def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nb
     xi_interp = interpolate.interp1d(r, xi)
     err_r_interp = interpolate.interp1d(r, err_r)
     err_xi_interp = interpolate.interp1d(r, err_xi)
+    
+    print("[WARNING] We interpolate error so it is not true one --> since if bins are smaller, DD will be too")
 
     bins = np.logspace(np.log10(min_theta),np.log10(max_theta), nbins)
 
