@@ -160,7 +160,7 @@ def plot_moll(map, min=None, max=None, title='', label=r'[$\#$ deg$^{-2}$]', sav
 
     plt.figure(figsize=figsize)
     ax = plt.subplot(111, projection=projection)
-    plt.subplots_adjust(left=0.14, bottom=0.23, right=0.96, top=0.96)
+    plt.subplots_adjust(left=0.14, bottom=0.18, right=0.96, top=0.90)
 
     mesh = plt.pcolormesh(np.radians(ra_grid), np.radians(dec_grid), map_to_plot, vmin=min, vmax=max, cmap='jet', edgecolor='none', lw=0)
 
