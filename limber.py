@@ -34,6 +34,7 @@ QLF_smooth =  QLF_inter(z_smooth)
 QLF_integral = quad(QLF_inter, 0., 5)[0]
 
 ### Convertir degree avec comoving_transverse_distance cf: https://en.wikipedia.org/wiki/Distance_measures_(cosmology)
+## rp en Mpc/h !! (cosmoprimo and nbodykit give the comoving distance in Mpc/h which is not the case in astropy)
 def rp2deg(rp, z=-1):
     if z==-1:
         z = 1.7 # redshift moyen de l'echantillon QSO avec QLF x completeness attendu par DESI
