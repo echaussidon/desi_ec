@@ -22,6 +22,7 @@ def setup_logging(log_level="info"):
             "info" : logging.INFO,
             "debug" : logging.DEBUG,
             "warning" : logging.WARNING,
+            "error" : logging.ERROR
             }
 
     logger = logging.getLogger();
