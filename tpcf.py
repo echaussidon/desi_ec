@@ -1,6 +1,6 @@
 # coding: utf-8
 # Author : Edmond Chaussidon (CEA)
-# function to read catalog, write input for CUTE to calculate 2pcf.
+# function to read catalog, write input / read output for CUTE and to compute 2pcf.
 
 import sys
 import os
@@ -10,6 +10,7 @@ logger = logging.getLogger("TPCF")
 import numpy as np
 import matplotlib.pyplot as plt
 import fitsio
+import pandas as pd
 from astropy.io import ascii
 
 from wrapper import time_measurement
@@ -56,6 +57,11 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
 def read_fits(filename):
     logger.info(f'Read fits file from : {filename}')
     return fitsio.FITS(filename)[1]
+
+def read_fits_to_pandas(filename, ext_name=1):
+    # ext_name can be int or string 
+    logger.info(f'Read ext: {ext_name} from {filename}')
+    return pd.DataFrame(fitsio.FITS(filename)[ext_name].read().byteswap().newbyteorder())
 
 
 def make_selection(darray, criterions):
