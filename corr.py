@@ -1,6 +1,8 @@
 # coding: utf-8
 # Author : Edmond Chaussidon (CEA)
 # Fonctions utiles pour le calcul de la fonction de correlation angulaire 2 points
+# Premières fonctions ... ---> utiliser tpcf maintenant pour l'interface avec CUTE
+# Ne pas SUPPRIMER pour pouvoir faire tourner les calculs du dossier Systematics 
 
 import numpy as np
 import healpy as hp
