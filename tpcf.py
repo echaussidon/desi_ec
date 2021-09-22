@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import fitsio
 import pandas as pd
+import healpy as hp
 from astropy.io import ascii
 
 from wrapper import time_measurement
@@ -54,14 +55,45 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
     return samples
 
 #------------------------------------------------------------------------------#
+#Class for imaging systematic weight 
+log = logging.getLogger('SysWeight')
+
+class SysWeight(object):
+
+    def __init__(self, Nside=256, tracer="QSO", dir_weight="/global/homes/e/edmondc/Scratch/Imaging_weight/"):
+        """
+        Tracer is either LRG (512), LRG_LOWDENS(512), ELG(512), ELG_HIP(512), QSO(256)
+        """
+        self.tracer = tracer
+        self.nside = Nside
+        weight_file = os.path.join(dir_weight, f"{tracer}_imaging_weight_{self.nside}.npy")
+        log.info(f"Read imaging weight: {weight_file}")
+        self.map = np.load(weight_file)
+
+    def __call__(self, ra, dec):
+        """
+        Return weight for Ra, Dec list
+        """
+        pix = hp.ang2pix(self.nside, ra, dec, nest=True, lonlat=True)
+        return self.map[pix]
+    
+    def plot_map(self):
+        from plot import plot_moll
+        plot_moll(self.map - 1, min=-0.2, max=0.2, label=self.tracer)
+
+#------------------------------------------------------------------------------#
 def read_fits(filename):
     logger.info(f'Read fits file from : {filename}')
     return fitsio.FITS(filename)[1]
 
-def read_fits_to_pandas(filename, ext_name=1):
+def read_fits_to_pandas(filename, ext_name=1, columns=None):
     # ext_name can be int or string 
     logger.info(f'Read ext: {ext_name} from {filename}')
-    return pd.DataFrame(fitsio.FITS(filename)[ext_name].read().byteswap().newbyteorder())
+    if columns is None:
+        dataFrame = pd.DataFrame(fitsio.FITS(filename)[ext_name].read().byteswap().newbyteorder())
+    else:
+        dataFrame = pd.DataFrame(fitsio.FITS(filename)[ext_name][columns].read().byteswap().newbyteorder())
+    return dataFrame
 
 
 def make_selection(darray, criterions):
@@ -85,8 +117,10 @@ def make_selection(darray, criterions):
             return darray[feature_name] >= value
         elif operation == '&':
             return (darray[feature_name]&2**value) != 0
+        elif operation == 'in':
+            return np.isin(darray[feature_name], value)
 
-    sel = np.ones(darray.size, dtype=bool)
+    sel = np.ones(darray.shape[0], dtype=bool)
     logger.info("We apply the selection:")
     for criterion in criterions:
         sel &= apply_criterion_for_selection(darray, criterion)
@@ -123,8 +157,7 @@ def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=N
 
     ascii.write([ra, dec, z, weight], filename , names=['ra', 'dec', 'z', 'w'],
                 format='no_header', overwrite=True)
-    logger.info(f"Write catalog in {filename}")
-    logger.info(f"with {ra.size} points\n")
+    logger.info(f"Write catalog in {filename} with {ra.size} points")
 
 
 def write_CUTE_ini(param):
@@ -196,8 +229,15 @@ def write_CUTE_ini(param):
     file.write("radial_aperture= 10\n")
     file.write("\n")
     file.write("# pm parameters\n")
-    file.write("use_pm= 0\n")
-    file.write("n_pix_sph= 0\n")
+    if 'use_pm' in param.keys():
+        file.write(f"use_pm= {param['use_pm']}\n")
+    else:
+        file.write("use_pm= 0\n")
+    if 'n_pix_sph' in param.keys():
+        file.write(f"n_pix_sph= {param['n_pix_sph']}\n")
+    else:
+        file.write("n_pix_sph= 0\n")
+
     file.close()
 
 

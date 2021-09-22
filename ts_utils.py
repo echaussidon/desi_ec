@@ -177,13 +177,13 @@ def add_colors_to_df(dataFrame):
     
 def add_proba_to_df(dataFrame, filename_proba='oupsi.npy', already_computed=False):
     if already_computed:
-        logger.info("Load proba from", filename_proba)
+        logger.info(f"Load proba from {filename_proba}")
         dataFrame['p_RF'] = np.load(filename_proba)
     else:
         proba_rf = compute_proba(dataFrame)
         dataFrame['p_RF'] = proba_rf
         np.save(filename_proba, proba_rf)
-        logger.info("Save proba to", filename_proba)
+        logger.info(f"Save proba to {filename_proba}")
         
 
 def add_footprint_to_df(dataFrame):
