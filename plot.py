@@ -13,6 +13,12 @@ import astropy.coordinates as coord
 from astropy.coordinates import frame_transform_graph
 from astropy.coordinates.matrix_utilities import rotation_matrix, matrix_product, matrix_transpose
 
+import warnings
+from astropy.utils.exceptions import AstropyDeprecationWarning
+warnings.simplefilter('ignore', category=AstropyDeprecationWarning)
+# to avoid this message:
+# WARNING: AstropyDeprecationWarning: Transforming a frame instance to a frame class (as opposed to another frame instance) will not be supported in the future.  Either explicitly instantiate the target frame, or first convert the source frame instance to a `astropy.coordinates.SkyCoord` and use its `transform_to()` method. [astropy.coordinates.baseframe]
+
 #----------------------------------------------------------------------------------------------------#
 # Quelques fonctions utiles pour les dessins
 
