@@ -3,7 +3,7 @@ import time
 
 _logging_handler = None
 
-def setup_logging(log_level="info"):
+def setup_logging(log_level="info", log_file=None):
     """
     Turn on logging, with the specified level.
     Taken from nbodykit: https://github.com/bccp/nbodykit/blob/master/nbodykit/__init__.py.
@@ -43,3 +43,11 @@ def setup_logging(log_level="info"):
 
     _logging_handler.setFormatter(fmt)
     logger.setLevel(levels[log_level])
+    
+    # SAVE LOG INTO A LOG FILE
+    if log_file is not None:
+        fh = logging.FileHandler(log_file)
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
+    
+
