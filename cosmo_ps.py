@@ -438,7 +438,7 @@ class CorrelationFunction(object):
         return AngularCorrelationFunction(self.tracer, theta, w)
 
     
-    def set_cov_with_theory(self, Pk, k):
+    def set_cov_with_theory(self, Pk, k, kind='cubic'):
         """
         Compute analytically the theoric covariance of the Correlation Function 
         Parameters
@@ -469,12 +469,14 @@ class CorrelationFunction(object):
         # On ne garde donc que le calcul de la triangulaire inférieure
         xi_cov =  np.tril(xi_cov) + np.tril(xi_cov, k=-1).T
 
-        self.cov = interp2d(r_prime, r_prime, xi_cov, bounds_error=False, fill_value=np.NaN)
+        self.cov = interp2d(r_prime, r_prime, xi_cov, bounds_error=False, fill_value=np.NaN, kind=kind)
 
         
-    def set_cov_with_sim(self, Pk, k, N_sim):
+    def set_cov_with_sim(self, Pk, k, N_sim, kind='cubic'):
         """
         Compute the covariance of the Correlation Function generating data with errors in k-space
+        Since PowerToCorrelation is a discretization of the integral, errors need to be average to describe the uncertainty 
+        in each bin used during the summation !!
         Parameters
         ----------
         Pk : PowerSpectrum()
@@ -486,10 +488,11 @@ class CorrelationFunction(object):
         -------
         self.cov : callable 2d function with NaN value when the interpolation cannot be performed.
         """
-        k_sim, Pk_sim, _ = Pk.generate_data(k, N_sim, bin_errors=False)
+        
+        k_sim, Pk_sim, _ = Pk.generate_data(k, N_sim, bin_errors=True)
         s_sim, Xi_sim = PowerToCorrelation(k_sim)(Pk_sim)
 
-        self.cov =  interp2d(s_sim, s_sim, np.cov(Xi_sim.T), bounds_error=False, fill_value=np.NaN) 
+        self.cov =  interp2d(s_sim, s_sim, np.cov(Xi_sim.T), bounds_error=False, fill_value=np.NaN, kind=kind) 
     
     
     def compute_covariance_matrix_for_bin(self, s_edge):
@@ -515,7 +518,10 @@ class CorrelationFunction(object):
         for i in tqdm.tqdm(range(s_sim.size)):
             for j in range(s_sim.size):
                 r, r_prime = np.linspace(s_sim[i] - delta_s[i]/2, s_sim[i] + delta_s[i]/2, 50), np.linspace(s_sim[j] - delta_s[j]/2, s_sim[j] + delta_s[j]/2, 50)
-                dr, dr_prime = r[1] - r[0], r_prime[1] - r_prime[0]
+                #pour prendre en compte des bins non linéaires:
+                dr, dr_prime = r[1:] - r[:-1], r_prime[1:] - r_prime[:-1]
+                r, r_prime = (r[1:] + r[:-1])/2, (r_prime[1:] + r_prime[:-1])/2
+                ## attention a la taille de sortie de interp2d ! il est en taille r_prime.size x r.size
                 cov_matrix[i, j] = np.sum(self.cov(r, r_prime) * (r**2*dr)[None, :] * (r_prime**2*dr_prime)[:, None]) / np.sum((r**2*dr)[None, :] * (r_prime**2*dr_prime)[:, None])
         return cov_matrix
         
@@ -602,7 +608,7 @@ class AngularCorrelationFunction(object):
         return w_eval
 
     
-    def set_cov_with_theory(self, Xi, theta, z_min=0., z_max=5.0, nbins=200):
+    def set_cov_with_theory(self, Xi, theta, z_min=0., z_max=5.0, nbins=200, kind='cubic'):
         """
         Compute analytically the covariance of the Angular Correlation Function using the correlation function covariance
         Parameters
@@ -626,7 +632,7 @@ class AngularCorrelationFunction(object):
             Z1, Z2 = np.meshgrid(z_tmp, z_tmp)
 
             # Compute these values only once ! (same for every angle)
-            f1xf2 = Xi.tracer.dn_dz(Z1)*dz * Xi.tracer.dn_dz(Z2)*dz
+            f1xf2 = self.tracer.dn_dz(Z1)*dz * self.tracer.dn_dz(Z2)*dz
 
             chi1, chi2 = chi(Z1, self.tracer.cosmo), chi(Z2, self.tracer.cosmo)
             chi1xx2_plus_chi2xx2 = chi1**2 + chi2**2
@@ -651,32 +657,60 @@ class AngularCorrelationFunction(object):
 
             w_cov += np.tril(w_cov, k=-1).T
     
-            self.cov = interp2d(theta, theta, w_cov, bounds_error=False, fill_value=np.NaN)
+            self.cov = interp2d(theta, theta, w_cov, bounds_error=False, fill_value=np.NaN, kind=kind)
     
     
-    def set_cov_with_sim(self, Pk, k_gen, theta_sim, N_sim):
+    def set_cov_with_sim(self, Pk, k_gen, theta, N_sim, z_min=0., z_max=5.0, nbins=500, kind='cubic'):
         """
         Compute the covariance of the Angular Correlation Function generating data with errors in k-space
+        See CorrelationFunction.xi_to_w() for effective description of the algorithm.
+        Speed up the process:
+        Same implementation but to avoid to reconstruct all the matrix ect ... do it only once instead of N_sim !
         Parameters
         ----------
         Pk : PowerSpectrum()
         k : float, array_like
             k vector with which the data will be generated
+        theta : float, array_like
+            angle on which the covariance will be estimated before to be interpolated 
         N_sim : int
             Number of data used to compute the covariance matrix
         Returns
         -------
         :attr:`cov` : callable 2d function with NaN value when the interpolation cannot be performed.
         """
-        k_sim, Pk_sim, _ = Pk.generate_data(k_gen, N_sim, bin_errors=False)
+        
+        k_sim, Pk_sim, _ = Pk.generate_data(k_gen, N_sim, bin_errors=True)
         s_sim, Xi_sim = PowerToCorrelation(k_sim)(Pk_sim)
     
-        w_sim = []
-        for i in tqdm.tqdm(range(N_sim)):
-            w_sim += [CorrelationFunction(Pk.tracer, s_sim, Xi_sim[i,:]).xi_to_w(theta_sim, nbins=500)(theta_sim)]
-        w_sim = np.array(w_sim)    
+        z1, z2 = np.linspace(z_min, z_max, nbins), np.linspace(z_min, z_max, nbins) 
+        dz1, dz2 = (z1[1] - z1[0]), (z2[1] - z2[0])
+        Z1, Z2 = np.meshgrid(z1, z2)
+
+        # Compute these values only once ! (same for every angle)
+        f1xf2 = self.tracer.dn_dz(Z1)*dz1 * self.tracer.dn_dz(Z2)*dz2
+
+        chi1, chi2 = chi(Z1, self.tracer.cosmo), chi(Z2, self.tracer.cosmo)
+        chi1xx2_plus_chi2xx2 = chi1**2 + chi2**2
+        chi1xchi2 = chi1 * chi2
+
+        cos_theta = np.cos(theta * np.pi/180)
+
+        # to store the result
+        w_sim = np.zeros((N_sim, theta.size))
         
-        self.cov = interp2d(theta_sim, theta_sim, np.cov(w_sim.T), bounds_error=False, fill_value=np.NaN)
+        ## on va devoir faire la boucle sur les N_Sim en premier car l'interpolation prend du temps et on ne peut pas sauvegarder 1000 interpolation ect ...
+        for i in tqdm.tqdm(range(N_sim)):
+            Xi_tmp = CorrelationFunction(Pk.tracer, s_sim, Xi_sim[i,:])
+            for k in range(theta.size):
+                # integration methode des rectangles point gauche
+                # cannot save r_12 for every theta even with a ravel --> to large 
+                r_12 = np.sqrt(chi1xx2_plus_chi2xx2 - 2*chi1xchi2*cos_theta[k])
+                # compute only where Xi is well defined with the interpolation
+                mask = (r_12 < s_sim[0]) | (r_12 > s_sim[-1])
+                w_sim[i, k] = np.nansum(Xi_tmp(r_12[~mask]) * f1xf2[~mask])
+        
+        self.cov = interp2d(theta, theta, np.cov(w_sim.T), bounds_error=False, fill_value=np.NaN, kind=kind)
 
     
     def compute_covariance_matrix_for_bin(self, theta_edge):
@@ -696,14 +730,16 @@ class AngularCorrelationFunction(object):
         
         delta_theta = theta_edge[1:] - theta_edge[:-1]
         theta_sim = (theta_edge[1:] + theta_edge[:-1])/2
-        
         cov_matrix = np.zeros((theta_sim.size, theta_sim.size))
         
         for i in tqdm.tqdm(range(theta_sim.size)):
             for j in range(theta_sim.size):
-                print("NOOOON IL FAT ETRE EN RADIAN POUR LE SIN et mettre les dtheta")
                 theta, theta_prime = np.linspace(theta_sim[i] - delta_theta[i]/2, theta_sim[i] + delta_theta[i]/2, 50), np.linspace(theta_sim[j] - delta_theta[j]/2, theta_sim[j] + delta_theta[j]/2, 50)
-                cov_matrix[i, j] = np.sum(self.cov(theta, theta_prime) * np.sin(np.radians(theta))[None, :] * np.sin(np.radians(theta_prime))[None, :]) / np.sum(np.sin(np.radians(theta))[None, :] * np.sin(np.radians(theta_prime))[None, :])
+                #pour prendre en compte des bins non linéaires:
+                dtheta, dtheta_prime = theta[1:] - theta[:-1], theta_prime[1:] - theta_prime[:-1]
+                theta, theta_prime = (theta[1:] + theta[:-1])/2, (theta_prime[1:] + theta_prime[:-1])/2
+                cov_matrix[i, j] = np.sum(self.cov(theta, theta_prime) * (dtheta*np.sin(np.radians(theta)))[None, :] * (dtheta_prime*np.sin(np.radians(theta_prime)))[:, None]) / np.sum((dtheta*np.sin(np.radians(theta)))[None, :] * (dtheta_prime*np.sin(np.radians(theta_prime)))[:, None])
+
         return cov_matrix
         
         
