@@ -227,9 +227,10 @@ def LRG_tracer():
     shot_noise_limited = True  
 
     ## Build dN/dz
+    # use linear to avoid negative value in the interpolation
     import fitsio
     LRG_path = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/everest/LSScats/test/LRG_main_clustering.dat.fits'
     dens, bins = np.histogram(fitsio.FITS(LRG_path)[1]['Z'][:], bins=25, range=(0, 2.0), density=1)
-    dn_dz_lrg = interp1d(bins[:-1], dens, kind='cubic', bounds_error=False, fill_value=(0,0))
+    dn_dz_lrg = interp1d(bins[:-1], dens, kind='linear', bounds_error=False, fill_value=(0,0))
 
     return Tracer("LRG", c_fid, bias, pop, z0, dn_dz_lrg, Area, density_deg2, z_width, shot_noise_limited)
