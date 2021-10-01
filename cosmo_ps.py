@@ -398,7 +398,7 @@ class CorrelationFunction(object):
         return Xi_eval
 
     
-    def xi_to_w(self, theta, z_min=0., z_max=5.0, nbins=700):
+    def xi_to_w(self, theta, z_min=0., z_max=5.0, nbins=700, disable_tqdm=True):
         """ 
         Compute the angular correlation from the 3d correlation function.
         # speed up the process with numpy matrix computation 
@@ -428,7 +428,7 @@ class CorrelationFunction(object):
         # to store the result
         w = np.zeros(theta.size)
 
-        for k in range(theta.size):
+        for k in tqdm.tqdm(range(theta.size), disable=disable_tqdm):
             # integration methode des rectangles point gauche
             r_12 = np.sqrt(chi1xx2_plus_chi2xx2 - 2*chi1xchi2*cos_theta[k])
             # compute only where Xi is well defined with the interpolation
@@ -437,7 +437,59 @@ class CorrelationFunction(object):
             
         return AngularCorrelationFunction(self.tracer, theta, w)
 
-    
+
+    def xi_to_w_with_kernel(self, theta, nbins=500, nbins_K=400, disable_tqdm=False):
+        """ 
+        Compute the angular correlation from the 3d correlation function using the kernel formalism
+        Parameters
+        ----------
+        theta : float array
+            angles given in degrees
+        nbins : int
+            number of bin along the r12 axis
+        nbins_K : int
+            number of bin used to compute the Kernel (along the r1 axis)
+        Returns
+        -------
+            w (numpy array): the angular correlation with same size than theta.
+
+        """
+        def kernel(r12, theta, tracer, z_min=0., z_max=5., nbins=500):
+            def g(r12, r1, theta, tracer):
+                r2_m = np.cos(np.radians(theta))*r1[None, :] - np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+                r2_p = np.cos(np.radians(theta))*r1[None, :] + np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+                z_at_r2_m, z_at_r2_p = chi_to_z(r2_m, tracer.cosmo), chi_to_z(r2_p, tracer.cosmo)
+
+                resu = np.zeros((r12.size, r1.size))
+                sel = np.where((r12[:, None] > (np.sin(np.radians(theta))*r1)[None, :]) & (r12[:, None] < r1[None, :]))
+                resu[sel] = tracer.dn_dz(z_at_r2_m[sel])/dchi_dz(z_at_r2_m[sel], tracer.cosmo) + tracer.dn_dz(z_at_r2_p[sel]) / dchi_dz(z_at_r2_p[sel], tracer.cosmo)
+                sel = r12[:, None] > r1[None, :]
+                resu[sel] = tracer.dn_dz(z_at_r2_p[sel]) / dchi_dz(z_at_r2_p[sel], tracer.cosmo)
+
+                return resu 
+
+            z1, dz1 = np.linspace(z_min, z_max, nbins, retstep=True)
+            r1 = chi(z1, tracer.cosmo)
+            dr2_dr12 = r12[:, None]/np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+
+            return np.nansum(g(r12, r1, theta, tracer) * dr2_dr12 * tracer.dn_dz(z1)[None, :] * dz1, axis=1)
+
+        if np.min(theta) < 0.1:
+            print("WARNING: IL FAUT ADAPTER LE BINNING POUR LE CALCUL DU KERNEL LORSQUE THETA EST PETIT")
+            print("         CE CALCUL FONCTIONNE POUR THETA >= 0.1")
+            print("         UTILISER Xi.xi_to_w")
+
+        w = np.zeros(theta.size)
+        # en dehors de s_ref Xi renvoit Nan 
+        r12, dr12 = np.linspace(self.s_ref_min, self.s_ref_max, nbins, retstep=True)
+        for i in tqdm.tqdm(range(theta.size), disable=disable_tqdm):
+            with np.errstate(invalid='ignore'): # To avoid warning with sqrt(-1) -> correctly handled with nansum
+                K = kernel(r12, theta[i], self.tracer, nbins=nbins_K)
+            w[i] = np.nansum(self(r12)*K*dr12)
+            
+        return AngularCorrelationFunction(self.tracer, theta, w)
+
+ 
     def set_cov_with_theory(self, Pk, k, kind='cubic'):
         """
         Compute analytically the theoric covariance of the Correlation Function 
@@ -607,8 +659,8 @@ class AngularCorrelationFunction(object):
         
         return w_eval
 
-    
-    def set_cov_with_theory(self, Xi, theta, z_min=0., z_max=5.0, nbins=200, kind='cubic'):
+
+    def set_cov_with_theory(self, Xi, theta, nbins=1000, nbins_K=800, kind='cubic'):
         """
         Compute analytically the covariance of the Angular Correlation Function using the correlation function covariance
         Parameters
@@ -616,44 +668,55 @@ class AngularCorrelationFunction(object):
         Xi : CorrelationFunction() with covariance set
         theta : float, array_like
             theta vector with which the covariance matrix will be generated
-        N_sim : int
-            Number of data used to compute the covariance matrix
+        nbins : int
+            number of bin along the r12 axis
+        nbins_K : int
+            number of bin used to compute the Kernel (along the r1 axis)
         Returns
         -------
         self.cov : callable 2d function with NaN value when the interpolation cannot be performed.
         """
+        
+        def kernel(r12, theta, tracer, z_min=0., z_max=5., nbins=500):
+            def g(r12, r1, theta, tracer):
+                r2_m = np.cos(np.radians(theta))*r1[None, :] - np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+                r2_p = np.cos(np.radians(theta))*r1[None, :] + np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+                z_at_r2_m, z_at_r2_p = chi_to_z(r2_m, tracer.cosmo), chi_to_z(r2_p, tracer.cosmo)
+
+                resu = np.zeros((r12.size, r1.size))
+                sel = np.where((r12[:, None] > (np.sin(np.radians(theta))*r1)[None, :]) & (r12[:, None] < r1[None, :]))
+                resu[sel] = tracer.dn_dz(z_at_r2_m[sel])/dchi_dz(z_at_r2_m[sel], tracer.cosmo) + tracer.dn_dz(z_at_r2_p[sel]) / dchi_dz(z_at_r2_p[sel], tracer.cosmo)
+                sel = r12[:, None] > r1[None, :]
+                resu[sel] = tracer.dn_dz(z_at_r2_p[sel]) / dchi_dz(z_at_r2_p[sel], tracer.cosmo)
+
+                return resu 
+
+            z1, dz1 = np.linspace(z_min, z_max, nbins, retstep=True)
+            r1 = chi(z1, tracer.cosmo)
+            dr2_dr12 = r12[:, None]/np.sqrt((r12**2)[:, None] - (np.sin(np.radians(theta))**2*r1**2)[None, :])
+
+            return np.nansum(g(r12, r1, theta, tracer) * dr2_dr12 * tracer.dn_dz(z1)[None, :] * dz1, axis=1)
+        
         if not hasattr(Xi, 'cov'):
             raise ValueError("Set Covariance before generating data...")
         else:
-            # symetric Z1, Z2 / Z3, Z4
-
-            z_tmp  = np.linspace(z_min, z_max, nbins) 
-            dz = (z_tmp[1] - z_tmp[0])
-            Z1, Z2 = np.meshgrid(z_tmp, z_tmp)
-
-            # Compute these values only once ! (same for every angle)
-            f1xf2 = self.tracer.dn_dz(Z1)*dz * self.tracer.dn_dz(Z2)*dz
-
-            chi1, chi2 = chi(Z1, self.tracer.cosmo), chi(Z2, self.tracer.cosmo)
-            chi1xx2_plus_chi2xx2 = chi1**2 + chi2**2
-            chi1xchi2 = chi1 * chi2
-
-            cos_theta= np.cos(theta * np.pi/180)
+            if np.min(theta) < 0.1:
+                print("WARNING: IL FAUT ADAPTER LE BINNING POUR LE CALCUL DU KERNEL LORSQUE THETA EST PETIT")
+                print("         CE CALCUL FONCTIONNE POUR THETA >= 0.1")
 
             w_cov = np.zeros((theta.size, theta.size))
 
-            # on utilise un mask pour ne pas faire des calculs inutile
-            for k in tqdm.tqdm(range(theta.size)):
-                r_12 = np.sqrt(chi1xx2_plus_chi2xx2 - 2*chi1xchi2*cos_theta[k])
-                mask = (r_12 < Xi.s_ref_min) | (r_12 > Xi.s_ref_max)
-                # la matrice est symmétrique (pas de calcul inutile !)
-                for l in range(k+1):
-                    r_12_prime = np.sqrt(chi1xx2_plus_chi2xx2 - 2*chi1xchi2*cos_theta[l])
-                    mask_tot = mask | (r_12_prime < Xi.s_ref_min) | (r_12_prime > Xi.s_ref_max)
+            r12, dr12 = np.linspace(Xi.s_ref_min, Xi.s_ref_max, nbins, retstep=True) 
+            cov_Xi = Xi.cov(r12, r12)
+            kernel_already_computed = []
 
-                    res = Xi.cov(r_12[~mask_tot], r_12_prime[~mask_tot])
-                    res *= f1xf2[~mask_tot] * f1xf2[~mask_tot]
-                    w_cov[k, l] = np.nansum(res)
+            for i in tqdm.tqdm(range(theta.size)):
+                with np.errstate(invalid='ignore'): # To avoid warning with sqrt(-1) -> correctly handled with nansum
+                    kernel_already_computed.append(kernel(r12, theta[i], self.tracer, nbins=nbins_K))
+                K = kernel_already_computed[i]
+                for j in range(i+1):
+                    K_prime = kernel_already_computed[j]
+                    w_cov[i, j] = np.nansum(cov_Xi * K[:, None] * K_prime[None, :] * dr12 * dr12)
 
             w_cov += np.tril(w_cov, k=-1).T
     
