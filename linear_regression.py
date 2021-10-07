@@ -31,7 +31,7 @@ def regression_least_square(model, regulator, data_x, data_y, data_y_cov_inv, nb
     # make the regression:
     m.migrad()
     if print_param:
-        print(m.get_param_states())
+        print(m.params)
     if use_minos:
         print(m.minos())
     if print_covariance:
