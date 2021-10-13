@@ -2,7 +2,7 @@
 # Author : Edmond Chaussidon (CEA)
 # Fonctions utiles pour le calcul de la fonction de correlation angulaire 2 points
 # Premières fonctions ... ---> utiliser tpcf maintenant pour l'interface avec CUTE
-# Ne pas SUPPRIMER pour pouvoir faire tourner les calculs du dossier Systematics 
+# Ne pas SUPPRIMER pour pouvoir faire tourner les calculs du dossier Systematics
 
 import numpy as np
 import healpy as hp
@@ -121,7 +121,7 @@ def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nb
     xi_interp = interpolate.interp1d(r, xi)
     err_r_interp = interpolate.interp1d(r, err_r)
     err_xi_interp = interpolate.interp1d(r, err_xi)
-    
+
     print("[WARNING] We interpolate error so it is not true one --> since if bins are smaller, DD will be too")
 
     bins = np.logspace(np.log10(min_theta),np.log10(max_theta), nbins)
@@ -131,7 +131,7 @@ def interpolate_ang_corr(r, xi, err_r, err_xi, min_theta=1e-3, max_theta=9.5, nb
     return r, xi, err_r, err_xi
 
 def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.', markersize=6, linewidth=None, markerfacecolor=None,
-                  label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None):
+                  label=None, alpha=1, min_theta=0.05, max_theta=10, nbins=None, zorder=0):
     r, xi, err_r, err_xi = compute_result(filename=filename)
     if nbins != None:
         r, xi, err_r, err_xi = interpolate_ang_corr(r, xi, err_r, err_xi, min_theta, max_theta, nbins)
@@ -141,7 +141,7 @@ def plot_ang_corr(ax, filename, err_y=True, color=None, linestyle='-', marker='.
         yerr = None
     else:
         yerr = err_xi[sel]
-    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha)
+    ax.errorbar(x=r[sel], y=xi[sel], xerr=None, yerr=yerr, marker=marker, markersize=markersize, markerfacecolor=markerfacecolor, linestyle=linestyle, linewidth=linewidth, color=color, label=label, alpha=alpha, zorder=zorder)
 
 def reconstruct_ang_corr(file1, file2, split_theta=0.5, min_theta=1e-3, max_theta=9.5, nbins=None):
     #We supposed that file2 goes at smaller theta than file1

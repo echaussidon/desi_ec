@@ -35,7 +35,7 @@ def regression_least_square(model, regulator, data_x, data_y, data_y_cov_inv, nb
     if use_minos:
         print(m.minos())
     if print_covariance:
-        print(repr(m.covariance)) 
+        print(repr(m.covariance))
     if return_errors:
         return [m.values[f"a{i}"] for i in range(0, nbr_params)], [m.errors[f"a{i}"] for i in range(0, nbr_params)]
     else:
@@ -69,6 +69,7 @@ def make_linear_regressor(X, Y, keep_to_train, regulator=0.0, print_level=1, pri
     dict_ini.update({'errordef':1}) #for leastsquare
     dict_ini.update({'print_level':print_level}) # to remove message from iminuit set 0
 
+    #can also use np.diag
     Y_cov_inv = 1/np.sqrt(Y_train) * np.eye(Y_train.size)
 
     param = regression_least_square(model, regulator, X_train, Y_train, Y_cov_inv, nbr_features, print_param=print_param, use_minos=False, return_errors=False, **dict_ini)
@@ -80,8 +81,8 @@ def make_linear_regressor(X, Y, keep_to_train, regulator=0.0, print_level=1, pri
 # Fit only one parameter
 def make_linear_regressor(model, X, Y, Y_cov_inv, regulator=0.0, print_level=1, print_param=True):
 
-    nbr_features = 1 
-    
+    nbr_features = 1
+
     dict_ini = {'a0': -0.0}
     dict_ini.update({f'error_a0' : 0.1})
     dict_ini.update({f'limit_a0': (-20, 50)})
