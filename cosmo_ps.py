@@ -104,7 +104,10 @@ class PowerSpectrum(object):
         
         # Compute the amplitude for Delta_b
         delta_c = 1.686 #the spherical collapse linear over-density
-        DH_inv = self.bg.H0/(constants.c/1000) # we want c in km/s  H0 s/km
+        # pay attention to the units !!
+        # k will be in h.Mpc^-1, self.bg.H0 is in km.s^-1.Mpc^-1 and constant.c is in m.s^-1
+        # DH_inv must be in unit of k
+        DH_inv = (self.bg.H0/self.bg.h)/(constants.c/1000) 
         Omega0 = self.bg.Omega_m(0.0)
         self.amp = 3*self.fnl*(self.tracer.bias - self.tracer.pop)*delta_c*Omega0*DH_inv**2
     
@@ -188,7 +191,7 @@ class PowerSpectrum(object):
         Parameters
         ----------
         k : float, array_like
-            Array of wavelenght on which the power spectrum will be evaluated
+            Array of wavelenght on which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
         Returns
         -------
         P : float, array_like
@@ -209,7 +212,7 @@ class PowerSpectrum(object):
         Parameters
         ----------
         k : float, array_like
-            Array of wavelenght in which the power spectrum will be evaluated
+            Array of wavelenght in which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
             
         Returns
         -------
