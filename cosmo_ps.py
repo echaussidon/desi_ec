@@ -107,7 +107,8 @@ class PowerSpectrum(object):
         # pay attention to the units !!
         # k will be in h.Mpc^-1, self.bg.H0 is in km.s^-1.Mpc^-1 and constant.c is in m.s^-1
         # DH_inv must be in unit of k
-        DH_inv = (self.bg.H0/self.bg.h)/(constants.c/1000) 
+        # By defintion H0 = 100 h.Mpc^-1.km.s^-1
+        DH_inv = 100/(constants.c/1000) 
         Omega0 = self.bg.Omega_m(0.0)
         self.amp = 3*self.fnl*(self.tracer.bias - self.tracer.pop)*delta_c*Omega0*DH_inv**2
     
