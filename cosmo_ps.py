@@ -108,9 +108,14 @@ class PowerSpectrum(object):
         # k will be in h.Mpc^-1, self.bg.H0 is in km.s^-1.Mpc^-1 and constant.c is in m.s^-1
         # DH_inv must be in unit of k
         # By defintion H0 = 100 h.Mpc^-1.km.s^-1
-        DH_inv = 100/(constants.c/1000) 
+        DH_inv = 100./(constants.c/1000) 
         Omega0 = self.bg.Omega_m(0.0)
         self.amp = 3*self.fnl*(self.tracer.bias - self.tracer.pop)*delta_c*Omega0*DH_inv**2
+        
+        # To avoid problem with negative fnl --> set at 0 or np.NaN ? the powerspectrum below the k_min value
+        # Use interpolation to invert the function
+        if fnl < 0.0:
+            self.k_min = interp1d(np.logspace(-5, 2, 500)**2*self.T_from_class(np.logspace(-5, 2, 500)), np.logspace(-5, 2, 500), kind='cubic')(-self.amp/self.tracer.bias)
     
     
     def set_Plin_from_array(self, k, new_Plin, keep_bias=True):
@@ -200,9 +205,13 @@ class PowerSpectrum(object):
             
         """
         
-        #attention : lors d'un super, call ne peut etre appele --> faire eval appele dans call
-        
-        Pk_total =  self.Plin(k) * (self.tracer.bias + self.amp/(self.T_from_class(k)*k**2))**2
+        # to avoid trouble with negative fnl
+        if 'k_min' in self.__dict__.keys():
+            not_masked = k > self.k_min
+            Pk_total = np.zeros(k.shape)
+            Pk_total[not_masked] = self.Plin(k[not_masked]) * (self.tracer.bias + self.amp/(self.T_from_class(k[not_masked])*k[not_masked]**2))**2
+        else:
+            Pk_total = self.Plin(k) * (self.tracer.bias + self.amp/(self.T_from_class(k)*k**2))**2
         return Pk_total
     
     

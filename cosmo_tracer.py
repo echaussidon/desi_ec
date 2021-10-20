@@ -243,7 +243,7 @@ def LBG_tracer():
     """
     ## Param for LBG tracer:
     bias = 3.2
-    pop = 1.6
+    pop = 1.0
     z0 = 2.76
     z_width = 1.4
     
