@@ -5,6 +5,7 @@
 import numpy as np
 
 from scipy.interpolate import interp1d
+from scipy.integrate import quad
 
 import tqdm
 
@@ -184,9 +185,9 @@ def QSO_tracer():
     bias = 2.5
     pop = 1.0
     z0 = 1.7
+    z_width = 1.4
 
     ## Info sur le survey:
-    z_width = 1.4
     density_deg2 = 200.0
     Area = 14000 # DESI geometry
 
@@ -196,15 +197,14 @@ def QSO_tracer():
     ## Build dN/dz from QLF and RF completeness (une fois que Evrest est sorti prendre le dn/dz d'Everest !!)
     import corr
     from astropy.io import ascii
-    from scipy.integrate import quad
     # DR8_RF == QFL * completeness_RF_D8 par bin de z 
     data_rf_g = ascii.read(corr.__file__[:-7] + '/RF_g.txt', format='no_header', names=['DR8_RF','z'])
     # Set 0 value for z=0
     dr8_rf_g, z_g = np.r_[np.array([0]), np.array(data_rf_g['DR8_RF'])], np.r_[np.array([0]), np.array(data_rf_g['z']) ]
     dd = interp1d(z_g, dr8_rf_g,  kind='quadratic', bounds_error=False, fill_value=(0,0))
-    QLF_integral = quad(dd, 0., 5, limit=100)[0]
+    normalization = quad(dd, 0., 5, limit=100)[0]
     def dn_dz_qso(z): 
-        return dd(z)/QLF_integral
+        return dd(z)/normalization
 
     return Tracer("QSO", c_fid, bias, pop, z0, dn_dz_qso, Area, density_deg2, z_width, shot_noise_limited)
 
@@ -217,9 +217,9 @@ def LRG_tracer():
     bias = 2.3  #https://arxiv.org/pdf/1607.05383.pdf
     pop = 1.0
     z0 = 0.7
+    z_width = 1.0
 
     ## Info sur le survey:
-    z_width = 1.0
     density_deg2 = 500.0
     Area = 14000 # DESI geometry
 
@@ -228,9 +228,46 @@ def LRG_tracer():
 
     ## Build dN/dz
     # use linear to avoid negative value in the interpolation
-    import fitsio
-    LRG_path = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/everest/LSScats/test/LRG_main_clustering.dat.fits'
+    import fitsio 
+    LRG_path = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/everest/LSScats/test/LRG_main_14_clustering.ran.fits'
+    #LRG_path = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/everest/LSScats/test/LRG_main_clustering.dat.fits'
     dens, bins = np.histogram(fitsio.FITS(LRG_path)[1]['Z'][:], bins=25, range=(0, 2.0), density=1)
     dn_dz_lrg = interp1d(bins[:-1], dens, kind='linear', bounds_error=False, fill_value=(0,0))
 
     return Tracer("LRG", c_fid, bias, pop, z0, dn_dz_lrg, Area, density_deg2, z_width, shot_noise_limited)
+
+
+def LBG_tracer():
+    """
+    Define LBG tracer
+    """
+    ## Param for LBG tracer:
+    bias = 3.2
+    pop = 1.0
+    z0 = 2.76
+    z_width = 1.4
+    
+    ## Info sur le survey:
+    density_deg2 = 500.0
+    Area = 10000
+    
+    ## shot noise limited regime ?
+    shot_noise_limited = True
+    
+    ## Build dN/dz
+    z = np.array([2.05, 2.15, 2.25, 2.35, 2.45, 2.55, 2.65, 2.75, 2.85, 2.95, 3.05, 3.15, 3.25, 3.35, 3.45, 3.55, 3.65, 3.75, 3.85, 3.95])
+    n_z = np.array([343., 484., 516., 866., 812., 1010., 948., 1012., 1219., 1228., 1069., 899., 694., 355., 124., 21., 8., 4., 5., 2.])
+    
+    n_z_interp = interp1d(z, n_z,  kind='quadratic', bounds_error=False, fill_value=(0,0))
+    #smooth 
+    from scipy.ndimage import gaussian_filter
+    z_s = np.linspace(0, 5, 1000)
+    n_z_interp = interp1d(z_s, gaussian_filter(n_z_interp(z_s), sigma=15),  kind='quadratic', bounds_error=False, fill_value=(0,0))
+    
+    normalization = quad(n_z_interp, 1.5, 4.5, limit=100)[0]
+    def dn_dz_bgs(z):
+        return n_z_interp(z)/normalization
+    
+    return Tracer("LRG", c_fid, bias, pop, z0, dn_dz_bgs, Area, density_deg2, z_width, shot_noise_limited)
+    
+

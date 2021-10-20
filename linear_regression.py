@@ -10,6 +10,7 @@ import numpy as np
 from iminuit import Minuit, describe
 from iminuit.util import make_func_code
 
+
 class LeastSquares:
     def __init__(self, model, regulator, x, y, cov_inv):
         self.model = model
