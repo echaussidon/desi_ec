@@ -213,7 +213,7 @@ def LRG_tracer():
     """
     Define Standard DESI LRG tracer
     """
-    ## Param for ELG as tracer:
+    ## Param for LRG as tracer:
     bias = 2.3  #https://arxiv.org/pdf/1607.05383.pdf
     pop = 1.0
     z0 = 0.7
