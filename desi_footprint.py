@@ -64,9 +64,16 @@ class DR9_footprint(object):
             pixmap[hp_in_box(256, [-120, 0, -90, -18.5], inclusive=True) + hp_in_box(256, [0, 120, -90, -17.4], inclusive=True)] = False
 
         if self.Nside != 256:
-            pixmap = hp.ud_grade(pixmap, Nside, order_in='NESTED')
+            pixmap = hp.ud_grade(pixmap, self.Nside, order_in='NESTED')
 
         return pixmap
+
+
+    def load_footprint(self):
+        """
+        Return dr9 footprint
+        """
+        return self.update_map(self.data['ISDR9'])
 
 
     def load_ngc_sgc(self):
@@ -74,7 +81,7 @@ class DR9_footprint(object):
         Return NGC / SGC mask
 
         """
-        return self.update_map(self.data['NGC']), self.update_map(self.data['SGC'])
+        return self.update_map(self.data['ISNGC']), self.update_map(self.data['ISSGC'])
 
 
     def load_photometry(self, remove_around_des=False):
@@ -105,6 +112,6 @@ class DR9_footprint(object):
         south_pole[dec > -30] = False
 
         if ngc_sgc_split:
-            return self.update_map(self.data['ISNORTH']), self.update_map(south_mid & self.data['NGC']), self.update_map(south_mid & self.data['SGC']), self.update_map(south_pole)
+            return self.update_map(self.data['ISNORTH']), self.update_map(south_mid & self.data['ISNGC']), self.update_map(south_mid & self.data['ISSGC']), self.update_map(south_pole)
         else:
             return self.update_map(self.data['ISNORTH']), self.update_map(south_mid), self.update_map(south_pole)
