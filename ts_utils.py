@@ -37,7 +37,7 @@ def magsExtFromFlux(dataFrame, show=False):
     zflux  = dataFrame['FLUX_Z'].values/dataFrame['MW_TRANSMISSION_Z'].values
     W1flux  = dataFrame['FLUX_W1'].values/dataFrame['MW_TRANSMISSION_W1'].values
     W2flux  = dataFrame['FLUX_W2'].values/dataFrame['MW_TRANSMISSION_W2'].values
-    
+
     W1flux[np.isnan(W1flux)]=0.
     W2flux[np.isnan(W2flux)]=0.
     gflux[np.isnan(gflux)]=0.
@@ -48,7 +48,7 @@ def magsExtFromFlux(dataFrame, show=False):
     gflux[np.isinf(gflux)]=0.
     rflux[np.isinf(rflux)]=0.
     zflux[np.isinf(zflux)]=0.
-  
+
     is_north = (dataFrame['DEC'].values >= 32) & (dataFrame['RA'].values >= 60) & (dataFrame['RA'].values <= 310)
     logger.info(f'shift photometry for {is_north.sum()} objects')
     if show:
@@ -59,12 +59,16 @@ def magsExtFromFlux(dataFrame, show=False):
         plt.hist(gflux[is_north], bins=100, range=(0, 50), label='shifted')
         plt.legend()
         plt.show()
-
-    g=np.where(gflux>0,22.5-2.5*np.log10(gflux), 0.)
-    r=np.where(rflux>0,22.5-2.5*np.log10(rflux), 0.)
-    z=np.where(zflux>0,22.5-2.5*np.log10(zflux), 0.)
-    W1=np.where(W1flux>0, 22.5-2.5*np.log10(W1flux), 0.)
-    W2=np.where(W2flux>0, 22.5-2.5*np.log10(W2flux), 0.)
+    
+    # PAS DE PROBLEME car np.where fait quand meme le travail mais n'enleve pas l'erreur ... 
+    # cf stack overflow
+    # invalid value to avoid warning with log estimation --> deal with nan
+    with np.errstate(divide='ignore', invalid='ignore'): 
+        g=np.where(gflux>0,22.5-2.5*np.log10(gflux), 0.)
+        r=np.where(rflux>0,22.5-2.5*np.log10(rflux), 0.)
+        z=np.where(zflux>0,22.5-2.5*np.log10(zflux), 0.)
+        W1=np.where(W1flux>0, 22.5-2.5*np.log10(W1flux), 0.)
+        W2=np.where(W2flux>0, 22.5-2.5*np.log10(W2flux), 0.)
 
     g[np.isnan(g)]=0.
     g[np.isinf(g)]=0.
@@ -76,13 +80,12 @@ def magsExtFromFlux(dataFrame, show=False):
     W1[np.isinf(W1)]=0.
     W2[np.isnan(W2)]=0.
     W2[np.isinf(W2)]=0.
-    
+
     return g, r, z, W1, W2
 
 
 def colors(nbEntries, nfeatures, g, r, z, W1, W2):
     colors = np.zeros((nbEntries,nfeatures))
-
     colors[:,0] = g-r
     colors[:,1] = r-z
     colors[:,2] = g-z
@@ -94,7 +97,6 @@ def colors(nbEntries, nfeatures, g, r, z, W1, W2):
     colors[:,8] = z-W2
     colors[:,9] = W1-W2
     colors[:,10] = r
-
     return colors
 
 
@@ -113,40 +115,15 @@ def compute_proba(dataFrame):
     myrf.loadForest(rf_fileName)
     proba_rf = myrf.predict_proba()
 
-    return proba_rf 
-
-
-def give_footprint(dataFrame):
-    # Compute in which zone the target is
-    # To apply a corresponding threshold
-    
-    is_north = (dataFrame['DEC'] >= 32.2) &\
-               (dataFrame['RA'] >= 60) &\
-               (dataFrame['RA'] <= 310)
-    
-    is_des = (dataFrame['NOBS_G'] > 4) &\
-         (dataFrame['NOBS_R'] > 4) &\
-         (dataFrame['NOBS_Z'] > 4) &\
-         ((dataFrame['RA'] >= 320) | (dataFrame['RA'] <= 100)) &\
-         (dataFrame['DEC'] <= 10)
-    
-    is_south = (dataFrame['DEC'] < 50) & ~is_des & ~is_north
-    
-    print(is_north.sum() + is_south.sum() + is_des.sum())
-    print(is_north.size)
-    
-    return is_north, is_south, is_des
+    return proba_rf
 
 
 def build_pixmap(dataFrame, Nside, in_deg=True):
-
     pixmap = np.zeros(hp.nside2npix(Nside))
     pixels = hp.ang2pix(Nside, dataFrame['RA'][:], dataFrame['DEC'][:], nest=True, lonlat=True)
     pix, counts = np.unique(pixels, return_counts=True)
     pixmap[pix] = counts
-    
     pixmap /= hp.nside2pixarea(Nside, degrees=True)
-    
     return pixmap
 
 
@@ -158,11 +135,10 @@ def add_mags_to_df(dataFrame):
     dataFrame['z'] = object_z
     dataFrame['W1'] = object_W1
     dataFrame['W2'] = object_W2
-    
-    
+
+
 def add_colors_to_df(dataFrame):
     #need to call add_mag_to_df before !
-    
     dataFrame['g-r'] = dataFrame['g'] - dataFrame['r']
     dataFrame['r-z'] = dataFrame['r'] - dataFrame['z']
     dataFrame['g-z'] = dataFrame['g'] - dataFrame['z']
@@ -174,7 +150,7 @@ def add_colors_to_df(dataFrame):
     dataFrame['z-W2'] = dataFrame['z'] - dataFrame['W2']
     dataFrame['W1-W2'] = dataFrame['W1'] - dataFrame['W2']
 
-    
+
 def add_proba_to_df(dataFrame, filename_proba='oupsi.npy', already_computed=False):
     if already_computed:
         logger.info(f"Load proba from {filename_proba}")
@@ -184,10 +160,140 @@ def add_proba_to_df(dataFrame, filename_proba='oupsi.npy', already_computed=Fals
         dataFrame['p_RF'] = proba_rf
         np.save(filename_proba, proba_rf)
         logger.info(f"Save proba to {filename_proba}")
-        
 
-def add_footprint_to_df(dataFrame):
+
+def add_footprint_for_cut_to_df(dataFrame):
+    def give_footprint(dataFrame):
+        # Compute in which zone the target is
+        # To apply a corresponding threshold
+        is_north = (dataFrame['DEC'] >= 32.2) &\
+                   (dataFrame['RA'] >= 60) &\
+                   (dataFrame['RA'] <= 310)
+
+        is_des = (dataFrame['NOBS_G'] > 4) &\
+             (dataFrame['NOBS_R'] > 4) &\
+             (dataFrame['NOBS_Z'] > 4) &\
+             ((dataFrame['RA'] >= 320) | (dataFrame['RA'] <= 100)) &\
+             (dataFrame['DEC'] <= 10)
+
+        is_south = (dataFrame['DEC'] < 50) & ~is_des & ~is_north
+
+        print(is_north.sum() + is_south.sum() + is_des.sum())
+        print(is_north.size)
+
+        return is_north, is_south, is_des
     is_north, is_south, is_des = give_footprint(dataFrame)
     dataFrame['IS_NORTH'] = is_north
     dataFrame['IS_SOUTH'] = is_south
     dataFrame['IS_DES'] = is_des
+
+#------------------------------------------------------------------------------#
+
+from matplotlib.gridspec import GridSpec
+
+from systematics import _load_systematics, systematics_med
+
+from desitarget.QA import _prepare_systematics
+from desitarget.io import load_pixweight_recarray
+
+import fitsio
+
+import matplotlib.pyplot as plt
+
+def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['North', 'South', 'Des'],
+                            pixweight_path='/global/cfs/cdirs/desi/target/catalogs/dr9/1.1.1/pixweight/main/resolve/dark/pixweight-1-dark.fits',
+                            photometric_footprint_path='/global/homes/e/edmondc/Systematics/regressor/Data/photometry_footprint_dr9_256.fits',
+                            sgr_stream_path='/global/homes/e/edmondc/Systematics/regressor/Sagittarius_Stream/sagittarius_stream_256.npy',
+                            ax_lim=0.3, adaptative_binning=False, nobjects_by_bins=2000, show=False, save=True):
+
+    def _load_footprint(photometric_footprint_path):
+        footprint_map = fitsio.FITS(photometric_footprint_path)[1]
+        north = footprint_map['ISNORTH'][:]
+        south = footprint_map['ISSOUTH'][:] & ~footprint_map['ISDES'][:]
+        des = footprint_map['ISDES'][:]
+        return north, south, des
+
+    pixmap_tot = load_pixweight_recarray(pixweight_path, nside=256)
+    sgr_stream_tot = np.load(sgr_stream_path)
+    with np.errstate(divide='ignore'): # Ok --> on n'utilise pas les pixels qui n'ont pas été observé, ils sont en-dehors du footprint
+        map_list_tot = [mp/pixmap_tot['FRACAREA_12290'] for mp in map_list]
+
+    north, south, des = _load_footprint(photometric_footprint_path)
+
+    sysdic = _load_systematics()
+    sysnames = list(sysdic.keys())
+
+    for num_fig, key_word in enumerate(zone_to_plot):
+        logger.info(f'Work with {key_word}')
+        if key_word == 'Global':
+            pix_to_keep = north | south | des
+        elif key_word == 'North':
+            pix_to_keep = north
+        elif key_word == 'South':
+            pix_to_keep = south
+        elif key_word == 'Des':
+            pix_to_keep = des
+        elif key_word == 'Decalz':
+            pix_to_keep = south | des
+
+        pixmap = pixmap_tot[pix_to_keep]
+        sgr_stream = sgr_stream_tot[pix_to_keep]
+        map_list = [mp[pix_to_keep] for mp in map_list_tot]
+        fracarea = pixmap['FRACAREA_12290']
+
+        #Dessin systematiques traditionnelles
+        fig = plt.figure(num_fig, figsize=(16.0,10.0))
+        gs = GridSpec(4, 3, figure=fig, left=0.06, right=0.96, bottom=0.08, top=0.96, hspace=0.35 , wspace=0.20)
+
+        num_to_plot = 0
+        for i in range(12):
+            sysname = sysnames[num_to_plot]
+            d, u, plotlabel, nbins = sysdic[sysname][key_word]
+            down, up = _prepare_systematics(np.array([d, u]), sysname)
+
+            if sysname == 'STREAM':
+                feature = _prepare_systematics(sgr_stream, sysname)
+            else:
+                feature =  _prepare_systematics(pixmap[sysname], sysname)
+
+            if i not in [9]: #[2, 9]: #on affiche les systematics que l'on veut définies dans _load_systematics()
+                ax = fig.add_subplot(gs[i//3, i%3])
+                ax.set_xlabel(plotlabel)
+                if i in [0, 3, 6]:
+                    ax.set_ylabel("Relative QSO density - 1")
+                ax.set_ylim([-ax_lim, ax_lim])
+
+                for mp, label in zip(map_list, label_list):
+                    bins, binmid, meds, nbr_obj_bins, meds_err = systematics_med(mp, fracarea, feature, sysname, downclip=down, upclip=up, nbins=nbins, adaptative_binning=adaptative_binning, nobjects_by_bins=nobjects_by_bins)
+                    ax.errorbar(binmid, meds - 1*np.ones(binmid.size), yerr=meds_err, marker='.', linestyle='-', lw=0.8, label=label)
+
+                ax_hist = ax.twinx()
+                ax_hist.set_xlim(ax.get_xlim())
+                ax_hist.set_ylim(ax.get_ylim())
+                if adaptative_binning:
+                    normalisation = nbr_obj_bins/0.1
+                else:
+                    normalisation = nbr_obj_bins.sum()
+                ax_hist.bar(binmid, nbr_obj_bins/normalisation, alpha=0.4, color='dimgray', align='center', width=(bins[1:] - bins[:-1]), label='Fraction of nbr objects by bin \n(after correction) ')
+                ax_hist.grid(False)
+                ax_hist.set_yticks([])
+
+                num_to_plot += 1
+
+            #if i==2:
+             #   ax = fig.add_subplot(gs[i//3, i%3])
+             #   ax.axis("off")
+             #   ax.text(0.5, 0.5, f"Zone : {key_word}", horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+                #on enleve le STREAM comme feature ok
+             #   num_to_plot += 1
+
+            if i==10:
+                ax.legend(bbox_to_anchor=(-1.1, 0.8), loc='upper left', borderaxespad=0., frameon=False, ncol=1, fontsize='large')
+                ax_hist.legend(bbox_to_anchor=(-1.1, 0.35), loc='upper left', borderaxespad=0., frameon=False, ncol=1, fontsize='large')
+
+        if save:
+            plt.savefig(savedir+"{}_systematics_plot.pdf".format(key_word))
+        if show:
+            plt.show()
+        else:
+            plt.close()

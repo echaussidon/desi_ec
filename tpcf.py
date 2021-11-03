@@ -55,12 +55,12 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
     return samples
 
 #------------------------------------------------------------------------------#
-#Class for imaging systematic weight 
+#Class for imaging systematic weight
 log = logging.getLogger('SysWeight')
 
 class SysWeight(object):
 
-    def __init__(self, Nside=256, tracer="QSO", dir_weight="/global/homes/e/edmondc/Scratch/Imaging_weight/"):
+    def __init__(self, Nside=256, tracer="QSO", dir_weight="/global/cfs/cdirs/desi/users/edmondc/Imaging_weight/"):
         """
         Tracer is either LRG (512), LRG_LOWDENS(512), ELG(512), ELG_HIP(512), QSO(256)
         """
@@ -76,7 +76,7 @@ class SysWeight(object):
         """
         pix = hp.ang2pix(self.nside, ra, dec, nest=True, lonlat=True)
         return self.map[pix]
-    
+
     def plot_map(self):
         from plot import plot_moll
         plot_moll(self.map - 1, min=-0.2, max=0.2, label=self.tracer)
@@ -87,7 +87,7 @@ def read_fits(filename):
     return fitsio.FITS(filename)[1]
 
 def read_fits_to_pandas(filename, ext_name=1, columns=None):
-    # ext_name can be int or string 
+    # ext_name can be int or string
     logger.info(f'Read ext: {ext_name} from {filename}')
     if columns is None:
         dataFrame = pd.DataFrame(fitsio.FITS(filename)[ext_name].read().byteswap().newbyteorder())
@@ -126,7 +126,15 @@ def make_selection(darray, criterions):
         sel &= apply_criterion_for_selection(darray, criterion)
     return sel
 
+#------------------------------------------------------------------------------#
+# FOR PYCORR !
+#------------------------------------------------------------------------------#
 
+
+
+#------------------------------------------------------------------------------#
+# FOR CUTE !
+#------------------------------------------------------------------------------#
 def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=None, use_weight='from_cat', add_weight=None, filename='oups.fits'):
     """Create catalog [RA, DEC, Z, WEIGHT] in .txt format.
     Parameters
