@@ -1,22 +1,21 @@
 import logging
 import time
+import sys
 
 _logging_handler = None
 
-def setup_logging(log_level="info", log_file=None):
+def setup_logging(log_level="info", stream=sys.stdout, log_file=None):
     """
-    Turn on logging, with the specified level.
-    Taken from nbodykit: https://github.com/bccp/nbodykit/blob/master/nbodykit/__init__.py.
+    
+    Turn on logging with specific configuration
+    
     Parameters
     ----------
-    log_level : 'info', 'debug', 'warning'
+    log_level : 'info', 'debug', 'warning', 'error'
         the logging level to set; logging below this level is ignored.
+    stream : sys.stdout or sys.stderror
+    log_file : filename path where the logger has to be written
     """
-
-    # This gives:
-    #
-    # [ 000000.43 ]   0: 06-28 14:49  measurestats    INFO     Nproc = [2, 1, 1]
-    # [ 000000.43 ]   0: 06-28 14:49  measurestats    INFO     Rmax = 120
 
     levels = {
             "info" : logging.INFO,
@@ -27,18 +26,16 @@ def setup_logging(log_level="info", log_file=None):
 
     logger = logging.getLogger();
     t0 = time.time()
-
+    
     class Formatter(logging.Formatter):
         def format(self, record):
-            s1 = ('[ %09.2f ]: ' % (time.time() - t0))
-            return s1 + logging.Formatter.format(self, record)
-
-    #fmt = Formatter(fmt='%(asctime)s %(name)-8s %(levelname)-8s %(message)s', datefmt='%m-%d %H:%M ')
-    fmt = Formatter(fmt='%(name)-8s %(levelname)-8s %(message)s')
+            self._style._fmt = '[%09.2f]' % (time.time() - t0) + ' %(asctime)s %(name)-28s %(levelname)-8s %(message)s'
+            return super(Formatter,self).format(record)
+    fmt = Formatter(datefmt='%y-%m-%d %H:%M ')
 
     global _logging_handler
     if _logging_handler is None:
-        _logging_handler = logging.StreamHandler()
+        _logging_handler = logging.StreamHandler(stream=stream)
         logger.addHandler(_logging_handler)
 
     _logging_handler.setFormatter(fmt)
