@@ -69,11 +69,11 @@ def limber(theta, *param):
 
     return (r0**gamma) * np.sqrt(np.pi) * integral * (np.deg2rad(theta))**(1-gamma) * special.gamma((gamma-1.0)/2.) / special.gamma(gamma/2.)
 
-def plot_limber(ax, r0, gamma, color=None, linestyle='--', linewidth=1, alpha=1, label='', label_param=True, min_theta=0.01, max_theta=1):
+def plot_limber(ax, r0, gamma, color=None, linestyle='--', linewidth=1, alpha=1, label='', label_param=True, min_theta=0.01, max_theta=1, zorder=0):
     if label_param:
         label = f'{label} ({r0:.2f}, {gamma:.2f})'
     x = np.logspace(np.log10(min_theta),np.log10(max_theta), 1000)
-    ax.plot(x, limber(x, r0, gamma), color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha)
+    ax.plot(x, limber(x, r0, gamma), color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, zorder=0)
 
 def Fit_Limber(r, xi, err_xi, r_min=0.01, r_max=0.6, use_minos=False, print_covariance=True):
     #attention ici: r_min et r_max sont en degree !
@@ -88,13 +88,13 @@ def Fit_Limber(r, xi, err_xi, r_min=0.01, r_max=0.6, use_minos=False, print_cova
     dict_ini.update({'limit_a0': (0, 20), 'limit_a1': (0, 10)})
     dict_ini.update({'errordef':1}) #for leastsquare
 
-    param = regression_least_square(limber, 0.0, r_fit, xi_fit, err_xi_fit, nbr_params, use_minos=use_minos, print_covariance=print_covariance, **dict_ini)
+    param = regression_least_square(limber, 0.0, r_fit, xi_fit, np.diag(1/err_xi_fit**2), nbr_params, use_minos=use_minos, print_covariance=print_covariance, **dict_ini)
 
     return param
 
-def limber_from_cute(filename, ax=None, color=None, linestyle='--', linewidth=1, marker=None, markerfacecolor=None, label='', alpha=1, min_theta=0.001, max_theta=1.0, label_param=True, use_minos=False, print_covariance=True):
+def limber_from_cute(filename, ax=None, color=None, linestyle='--', linewidth=1, marker=None, markerfacecolor=None, label='', alpha=1, min_theta=0.001, max_theta=1.0, label_param=True, use_minos=False, print_covariance=True, zorder=0):
     r, xi, err_r, err_xi = compute_result(filename=filename)
     par = Fit_Limber(r, xi, err_xi, min_theta, max_theta, use_minos, print_covariance)
 
     if ax != None:
-        plot_limber(ax, par[0], par[1], color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, label=label, label_param=True, min_theta=min_theta, max_theta=max_theta)
+        plot_limber(ax, par[0], par[1], color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, label=label, label_param=True, min_theta=min_theta, max_theta=max_theta, zorder=zorder)
