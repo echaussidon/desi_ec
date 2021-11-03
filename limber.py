@@ -15,14 +15,14 @@ from astropy.io import ascii
 
 from linear_regression import regression_least_square
 from corr import compute_result
-import corr #pour ouvrir le fichier RF_g
+
 
 ###Load Planck cosmology:
 c_fid = cosmology.Planck15
 
 ### Build Quasar luminosity function:
 # dN/dz
-data_rf_g = ascii.read(corr.__file__[:-7] + 'Data/RF_g.txt', format='no_header', names=['DR8_RF','z'])
+data_rf_g = ascii.read(os.path.join(os.path.dirname(__file__), 'Data/RF_g.txt'), format='no_header', names=['DR8_RF','z'])
 dr8_rf_g = np.array(data_rf_g['DR8_RF']) #QFL * completeness_RF_D8 par bin de z
 z_g = np.array(data_rf_g['z'])           #les bins de z
 
