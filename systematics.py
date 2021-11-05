@@ -1,4 +1,11 @@
+## coding: utf-8
+## Author : Edmond Chaussidon (CEA)
+
+import logging
+logger = logging.getLogger("systematics")
+
 import numpy as np
+import warnings
 
 def f(x) : return 22.5 - 2.5*np.log10(5/np.sqrt(x))
 
@@ -101,8 +108,8 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     # Selection of pixels with correct fracarea and which respect the up/downclip for the 'feature_name' feature
     sel = (fracarea < 1.1) & (fracarea > 0.9) & (feature >= downclip) & (feature < upclip)
     if not np.any(sel):
-        print("Pixel map has no areas (with >90% coverage) with the up/downclip")
-        print("Proceeding without clipping systematics for {}".format(feature_name))
+        logger.info("Pixel map has no areas (with >90% coverage) with the up/downclip")
+        logger.info("Proceeding without clipping systematics for {}".format(feature_name))
         sel = (fracarea < 1.1) & (fracarea > 0.9)
     targets = targets[sel]
     feature = feature[sel]
@@ -121,7 +128,10 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
 
     if use_mean:
         norm_targets = targets/np.nanmean(targets)
-        meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+        # I expect to see mean of empty slice (no non NaN value in the considered bin --> return nan value --> ok
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
     else:
         # build normalized targets : the normalization is done by the median density
         norm_targets = targets/np.nanmedian(targets)

@@ -59,11 +59,11 @@ def magsExtFromFlux(dataFrame, show=False):
         plt.hist(gflux[is_north], bins=100, range=(0, 50), label='shifted')
         plt.legend()
         plt.show()
-    
-    # PAS DE PROBLEME car np.where fait quand meme le travail mais n'enleve pas l'erreur ... 
+
+    # PAS DE PROBLEME car np.where fait quand meme le travail mais n'enleve pas l'erreur ...
     # cf stack overflow
     # invalid value to avoid warning with log estimation --> deal with nan
-    with np.errstate(divide='ignore', invalid='ignore'): 
+    with np.errstate(divide='ignore', invalid='ignore'):
         g=np.where(gflux>0,22.5-2.5*np.log10(gflux), 0.)
         r=np.where(rflux>0,22.5-2.5*np.log10(rflux), 0.)
         z=np.where(zflux>0,22.5-2.5*np.log10(zflux), 0.)
@@ -188,37 +188,34 @@ def add_footprint_for_cut_to_df(dataFrame):
     dataFrame['IS_DES'] = is_des
 
 #------------------------------------------------------------------------------#
-
+import fitsio
 from matplotlib.gridspec import GridSpec
-
-from systematics import _load_systematics, systematics_med
+import matplotlib.pyplot as plt
 
 from desitarget.QA import _prepare_systematics
 from desitarget.io import load_pixweight_recarray
 
-import fitsio
+from systematics import _load_systematics, systematics_med
+from desi_footprint import DR9_footprint
 
-import matplotlib.pyplot as plt
-
-def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['North', 'South', 'Des'],
+def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['North', 'South', 'Des'], Nside=256, remove_LMC=False, clear_south=True,
                             pixweight_path='/global/cfs/cdirs/desi/target/catalogs/dr9/1.1.1/pixweight/main/resolve/dark/pixweight-1-dark.fits',
-                            photometric_footprint_path='/global/homes/e/edmondc/Systematics/regressor/Data/photometry_footprint_dr9_256.fits',
                             sgr_stream_path='/global/homes/e/edmondc/Systematics/regressor/Sagittarius_Stream/sagittarius_stream_256.npy',
-                            ax_lim=0.3, adaptative_binning=False, nobjects_by_bins=2000, show=False, save=True):
+                            ax_lim=0.3, adaptative_binning=False, nobjects_by_bins=2000, show=False, save=True,
+                            n_bins=None):
 
-    def _load_footprint(photometric_footprint_path):
-        footprint_map = fitsio.FITS(photometric_footprint_path)[1]
-        north = footprint_map['ISNORTH'][:]
-        south = footprint_map['ISSOUTH'][:] & ~footprint_map['ISDES'][:]
-        des = footprint_map['ISDES'][:]
-        return north, south, des
+    #load DR9 region
+    DR9 = DR9_footprint(Nside, remove_LMC=remove_LMC, clear_south=clear_south)
 
-    pixmap_tot = load_pixweight_recarray(pixweight_path, nside=256)
+    # load pixweight file and Sgr. map at correct Nside
+    pixmap_tot = load_pixweight_recarray(pixweight_path, nside=Nside)
     sgr_stream_tot = np.load(sgr_stream_path)
+    if Nside != 256:
+        sgr_stream_tot = hp.ud_grade(sgr_stream_tot, Nside, order_in=True)
+
+    # correct map with the fracarea (for maskbit 1, 12, 13)
     with np.errstate(divide='ignore'): # Ok --> on n'utilise pas les pixels qui n'ont pas été observé, ils sont en-dehors du footprint
         map_list_tot = [mp/pixmap_tot['FRACAREA_12290'] for mp in map_list]
-
-    north, south, des = _load_footprint(photometric_footprint_path)
 
     sysdic = _load_systematics()
     sysnames = list(sysdic.keys())
@@ -226,15 +223,32 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
     for num_fig, key_word in enumerate(zone_to_plot):
         logger.info(f'Work with {key_word}')
         if key_word == 'Global':
-            pix_to_keep = north | south | des
+            pix_to_keep = DR9.load_footprint()
+            key_word_sys = key_word
         elif key_word == 'North':
-            pix_to_keep = north
+            pix_to_keep, _, _ = DR9.load_photometry()
+            key_word_sys = key_word
         elif key_word == 'South':
-            pix_to_keep = south
+            _, pix_to_keep, _ = DR9.load_photometry()
+            key_word_sys = key_word
         elif key_word == 'Des':
-            pix_to_keep = des
-        elif key_word == 'Decalz':
-            pix_to_keep = south | des
+            _, _, pix_to_keep = DR9.load_photometry()
+            key_word_sys = key_word
+        elif key_word == 'South_mid':
+            _, pix_to_keep, _ = DR9.load_elg_region()
+            key_word_sys = 'South'
+        elif key_word == 'South_mid_ngc':
+            _, pix_to_keep, _, _ = DR9.load_elg_region(ngc_sgc_split=True)
+            key_word_sys = 'South'
+        elif key_word == 'South_mid_sgc':
+            _, _, pix_to_keep, _ = DR9.load_elg_region(ngc_sgc_split=True)
+            key_word_sys = 'South'
+        elif key_word == 'South_pole':
+            _, _, pix_to_keep = DR9.load_elg_region()
+            key_word_sys = 'Des'
+        else:
+            print("WRONG KEY WORD")
+            sys.exit()
 
         pixmap = pixmap_tot[pix_to_keep]
         sgr_stream = sgr_stream_tot[pix_to_keep]
@@ -248,7 +262,9 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
         num_to_plot = 0
         for i in range(12):
             sysname = sysnames[num_to_plot]
-            d, u, plotlabel, nbins = sysdic[sysname][key_word]
+            d, u, plotlabel, nbins = sysdic[sysname][key_word_sys]
+            if n_bins is not None:
+                nbins=n_bins
             down, up = _prepare_systematics(np.array([d, u]), sysname)
 
             if sysname == 'STREAM':
