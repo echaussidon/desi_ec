@@ -6,14 +6,14 @@ _logging_handler = None
 
 def setup_logging(log_level="info", stream=sys.stdout, log_file=None):
     """
-    
+
     Turn on logging with specific configuration
-    
+
     Parameters
     ----------
     log_level : 'info', 'debug', 'warning', 'error'
         the logging level to set; logging below this level is ignored.
-    stream : sys.stdout or sys.stderror
+    stream : sys.stdout or sys.stderr
     log_file : filename path where the logger has to be written
     """
 
@@ -26,7 +26,7 @@ def setup_logging(log_level="info", stream=sys.stdout, log_file=None):
 
     logger = logging.getLogger();
     t0 = time.time()
-    
+
     class Formatter(logging.Formatter):
         def format(self, record):
             self._style._fmt = '[%09.2f]' % (time.time() - t0) + ' %(asctime)s %(name)-28s %(levelname)-8s %(message)s'
@@ -40,11 +40,9 @@ def setup_logging(log_level="info", stream=sys.stdout, log_file=None):
 
     _logging_handler.setFormatter(fmt)
     logger.setLevel(levels[log_level])
-    
+
     # SAVE LOG INTO A LOG FILE
     if log_file is not None:
         fh = logging.FileHandler(log_file)
         fh.setFormatter(fmt)
         logger.addHandler(fh)
-    
-
