@@ -60,14 +60,26 @@ log = logging.getLogger('SysWeight')
 
 class SysWeight(object):
 
-    def __init__(self, Nside=256, tracer="QSO", dir_weight="/global/cfs/cdirs/desi/users/edmondc/Imaging_weight/"):
+    def __init__(self, tracer="LRG", survey='SV3', Nside=None, use_stream=False, dir_weight="/global/cfs/cdirs/desi/users/edmondc/Imaging_weight/"):
         """
-        Tracer is either LRG (512), LRG_LOWDENS(512), ELG(512), ELG_HIP(512), QSO(256)
+        Survey is eihter SV3 or MAIN.
+        Tracer is either LRG, LRG_LOWDENS, ELG, ELG_HIP, QSO for SV3 and QSO for MAIN
         """
-        self.tracer = tracer
-        self.nside = Nside
-        weight_file = os.path.join(dir_weight, f"{tracer}_imaging_weight_{self.nside}.npy")
-        log.info(f"Read imaging weight: {weight_file}")
+        self.tracer=tracer
+        self.survey=survey
+        if Nside is not None:
+            self.nside = Nside
+        elif tracer in ["QSO", "ELG_VLO"]:
+            self.nside=256
+        else:
+            self.nside=512
+
+        suffixe=''
+        if use_stream:
+            suffixe='_with_stream'
+
+        weight_file = os.path.join(dir_weight, f"{survey}/{tracer}_imaging_weight_{self.nside}{suffixe}.npy")
+        logging.info(f"Read imaging weight: {weight_file}")
         self.map = np.load(weight_file)
 
     def __call__(self, ra, dec):
@@ -78,9 +90,9 @@ class SysWeight(object):
         return self.map[pix]
 
     def plot_map(self):
-        from plot import plot_moll
-        plot_moll(self.map - 1, min=-0.2, max=0.2, label=self.tracer)
-
+        from plot import plot_moll, to_tex
+        plot_moll(self.map - 1, min=-0.2, max=0.2, label=to_tex(self.tracer))
+        
 #------------------------------------------------------------------------------#
 def read_fits(filename):
     logger.info(f'Read fits file from : {filename}')
@@ -287,7 +299,7 @@ def extract_cute_result_1D(filename, return_dd=False):
     err_r = np.zeros(len(r))/rr
 
     if return_dd:
-        return r, xi, err_r, err_xi, dd, rr, dr, rd, rr
+        return r, xi, err_r, err_xi, dd, dr, rd, rr
     else:
         return r, xi, err_r, err_xi
 
