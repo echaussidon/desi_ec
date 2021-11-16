@@ -180,6 +180,28 @@ def LRG_tracer():
     return Tracer("LRG", c_fid, bias, pop, z0, dn_dz, Area, density_deg2, z_width, shot_noise_limited)
 
 
+def ELG_VLO_tracer():
+    """
+    Define Standard DESI LRG tracer
+    """
+    ## Param for LRG as tracer:
+    bias = 1.3 
+    pop = 1.0
+    z0 = 0.98
+    z_width = 1.1
+
+    ## Info sur le survey:
+    density_deg2 = 500.0
+    Area = 14000 # DESI geometry
+    ## shot noise limited regime ?
+    shot_noise_limited = True
+
+    ## Load n(z)
+    dn_dz = DN_DZ(os.path.join(os.path.dirname(__file__), 'Data/dn_dz_elg_lp.txt'))
+
+    return Tracer("LRG", c_fid, bias, pop, z0, dn_dz, Area, density_deg2, z_width, shot_noise_limited)
+
+
 def QSO_tracer():
     """
     Define Standard DESI QSO tracer
@@ -219,6 +241,6 @@ def LBG_tracer():
     shot_noise_limited = True
 
     ## Load n(z)
-    dn_dz = DN_DZ(os.path.join(os.path.dirname(__file__), 'Data/dn_dz_bgs.txt'))
+    dn_dz = DN_DZ(os.path.join(os.path.dirname(__file__), 'Data/dn_dz_lbg.txt'))
 
     return Tracer("LBG", c_fid, bias, pop, z0, dn_dz_bgs, Area, density_deg2, z_width, shot_noise_limited)
