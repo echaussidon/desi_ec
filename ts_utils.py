@@ -118,7 +118,7 @@ def compute_proba(dataFrame):
     return proba_rf
 
 
-def build_pixmap(dataFrame, Nside, in_deg=True):
+def build_pixmap(dataFrame, Nside, use_weight=False, in_deg=True):
     pixmap = np.zeros(hp.nside2npix(Nside))
     pixels = hp.ang2pix(Nside, dataFrame['RA'][:], dataFrame['DEC'][:], nest=True, lonlat=True)
     pix, counts = np.unique(pixels, return_counts=True)
@@ -231,6 +231,14 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
         elif key_word == 'South':
             _, pix_to_keep, _ = DR9.load_photometry()
             key_word_sys = key_word
+        elif kew_word == 'South_ngc':
+            _, pix_to_keep, _ = DR9.load_photometry()
+            ngc, _ = DR9.load_ngc_sgc()
+            pix_to_keep &= ngc
+        elif kew_word == 'South_sgc':
+            _, pix_to_keep, _ = DR9.load_photometry()
+            _, sgc = DR9.load_ngc_sgc()
+            pix_to_keep &= sgc
         elif key_word == 'Des':
             _, _, pix_to_keep = DR9.load_photometry()
             key_word_sys = key_word
