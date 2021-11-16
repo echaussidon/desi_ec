@@ -231,11 +231,11 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
         elif key_word == 'South':
             _, pix_to_keep, _ = DR9.load_photometry()
             key_word_sys = key_word
-        elif kew_word == 'South_ngc':
+        elif key_word == 'South_ngc':
             _, pix_to_keep, _ = DR9.load_photometry()
             ngc, _ = DR9.load_ngc_sgc()
             pix_to_keep &= ngc
-        elif kew_word == 'South_sgc':
+        elif key_word == 'South_sgc':
             _, pix_to_keep, _ = DR9.load_photometry()
             _, sgc = DR9.load_ngc_sgc()
             pix_to_keep &= sgc
