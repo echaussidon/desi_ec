@@ -277,20 +277,20 @@ class PowerSpectrum(object):
     
     
     def pk_to_xi(self, k, compute_rsd=False):
-        #"""
-        #Compute the correlation function throught PowerToCorrelation function of cosmoprimo which used FFT log algorithm.
-        #
-        #Parameters
-        #----------
-        #k : float, array_like
-        #    Array of wavelenght in which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
-        #compute_rsd : bool
-        #    If True, compute $\xi_{ell}$ from $P_{\ell}$ using PowerToCorrelation and then interpolate.
-        #
-        #Returns
-        #-------
-        #Xi : CorrelationFunction class
-        #"""
+        """
+        Compute the correlation function throught PowerToCorrelation function of cosmoprimo which used FFT log algorithm.
+        
+        Parameters
+        ----------
+        k : float, array_like
+            Array of wavelenght in which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
+        compute_rsd : bool
+            If True, compute xi_ell from P_ell using PowerToCorrelation and then interpolate.
+        
+        Returns
+        -------
+        Xi : CorrelationFunction class
+        """
         r, Xi_val = PowerToCorrelation(k)(self(k))
         Xi = CorrelationFunction(self.tracer, r, Xi_val)
         
