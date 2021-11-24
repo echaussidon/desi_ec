@@ -12,6 +12,7 @@ import tqdm
 from cosmoprimo import *
 from cosmoprimo import constants
 
+
 # ---------------------------------------------------------------------------------------------------- #    
 # efficient implemantion to get chi_to_z 
 # chi_to_z = DistanceToRedshift(c_fid.get_background().comoving_radial_distance)
@@ -52,6 +53,7 @@ class DistanceToRedshift(object):
         """Return (interpolated) redshift at distance ``distance`` (scalar or array)."""
         return self.interp(distance)
 
+
 # ---------------------------------------------------------------------------------------------------- #    
 # Usefull fonction for cosmological computation
 
@@ -66,6 +68,7 @@ def dchi_dz(z, cosmo):
 def chi(z, cosmo):
     ## attention ici ca marche car on travail dans un univers plat !
     return cosmo.get_background().comoving_radial_distance(z)
+
 
 # ---------------------------------------------------------------------------------------------------- #  
 ## Class : PowerSpectrum / CorrelationFunction / AngularCorrelationFunction
@@ -215,21 +218,90 @@ class PowerSpectrum(object):
         return Pk_total
     
     
-    def pk_to_xi(self, k):
+    def monopole(self, k):
         """
-        Compute the correlation function throught PowerToCorrelation function of cosmoprimo which used FFT log algorithm.
+        Compute the monopole (in redshift space) of the power spectrum for k
         
         Parameters
         ----------
         k : float, array_like
-            Array of wavelenght in which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
-            
+            Array of wavelenght on which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
         Returns
         -------
-        Xi : CorrelationFunction class
+        P : float, array_like
+            The monopole. Size of k
+            
         """
-        r, Xi = PowerToCorrelation(k)(self(k))
-        return CorrelationFunction(self.tracer, r, Xi)
+        return (1 + 2/3*self.tracer.beta + 1/5*self.tracer.beta**2)*self(k)
+    
+    
+    def quadrupole(self, k):
+        """
+        Compute the quadrupole (in redshift space) of the power spectrum for k
+        
+        Parameters
+        ----------
+        k : float, array_like
+            Array of wavelenght on which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
+        Returns
+        -------
+        P : float, array_like
+            The quadrupole. Size of k
+            
+        """
+        return (4/3*self.tracer.beta + 4/7*self.tracer.beta**2)*self(k)
+    
+    
+    def hexadecapole(self, k):
+        """
+        Compute the quadrupole (in redshift space) of the power spectrum for k
+        
+        Parameters
+        ----------
+        k : float, array_like
+            Array of wavelenght on which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
+        Returns
+        -------
+        P : float, array_like
+            The quadrupole. Size of k
+            
+        """
+        return (8/35*self.tracer.beta**2)*self(k)
+    
+    
+    def rsd(self, k):
+        """
+        Compute the monopole, quadrupole, hexadecapole in the same function
+        """
+        return [self.monopole(k), self.quadrupole(k), self.hexadecapole(k)]
+    
+    
+    def pk_to_xi(self, k, compute_rsd=False):
+        #"""
+        #Compute the correlation function throught PowerToCorrelation function of cosmoprimo which used FFT log algorithm.
+        #
+        #Parameters
+        #----------
+        #k : float, array_like
+        #    Array of wavelenght in which the power spectrum will be evaluated  in units of :math:`h \mathrm{Mpc}^{-1}`
+        #compute_rsd : bool
+        #    If True, compute $\xi_{ell}$ from $P_{\ell}$ using PowerToCorrelation and then interpolate.
+        #
+        #Returns
+        #-------
+        #Xi : CorrelationFunction class
+        #"""
+        r, Xi_val = PowerToCorrelation(k)(self(k))
+        Xi = CorrelationFunction(self.tracer, r, Xi_val)
+        
+        if compute_rsd:
+            r, XX_val = PowerToCorrelation(k, ell=[0, 2, 4])(self.rsd(k))
+            Xi.monopole = CorrelationFunction(self.tracer, r[0], XX_val[0])
+            Xi.quadrupole = CorrelationFunction(self.tracer, r[1], XX_val[1])
+            Xi.hexadecapole = CorrelationFunction(self.tracer, r[2], XX_val[2])
+        
+        return Xi
+    
 
     
     def pk_to_cl(self, ell):            

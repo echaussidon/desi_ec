@@ -89,15 +89,17 @@ class Tracer(object):
         """
 
         self.name = name
-
-        # tracor parameters
-        self.bias = bias
-        self.pop = pop
-        self.z0 = z0
-        self.dn_dz = dn_dz
-
+        
         # fiducial cosmology
         self.cosmo = cosmo
+
+        # tracor parameters
+        self.z0 = z0
+        self.dn_dz = dn_dz
+        
+        self.bias = bias
+        self.beta = self.cosmo.get_background().growth_rate(self.z0) / self.bias
+        self.pop = pop
 
         # Survey information
         self.area = area
