@@ -118,7 +118,7 @@ def compute_proba(dataFrame):
     return proba_rf
 
 
-def build_pixmap(dataFrame, Nside, in_deg=True):
+def build_pixmap(dataFrame, Nside, in_deg=False):
     pixmap = np.zeros(hp.nside2npix(Nside))
     pixels = hp.ang2pix(Nside, dataFrame['RA'][:], dataFrame['DEC'][:], nest=True, lonlat=True)
     pix, counts = np.unique(pixels, return_counts=True)
@@ -127,7 +127,8 @@ def build_pixmap(dataFrame, Nside, in_deg=True):
         pixmap /= hp.nside2pixarea(Nside, degrees=True)
     return pixmap
 
-def build_pixmap_from_weight(dataFrame, weight, Nside):
+
+def build_pixmap_from_weight(dataFrame, weight, Nside, in_deg=False):
     pixels = hp.ang2pix(Nside, dataFrame['RA'].values, dataFrame['DEC'].values, nest=True, lonlat=True)
 
     ind_sort = np.argsort(pixels)
@@ -140,6 +141,9 @@ def build_pixmap_from_weight(dataFrame, weight, Nside):
     pixmap = np.zeros(hp.nside2npix(Nside))
     for i, num in enumerate(num_pix):
         pixmap[num] = np.sum(weight_sorted[idx[i]: idx[i+1]])
+        
+    if in_deg:
+        pixmap /= hp.nside2pixarea(Nside, degrees=True)
         
     return pixmap
 

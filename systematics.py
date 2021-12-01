@@ -111,6 +111,9 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
         logger.info("Pixel map has no areas (with >90% coverage) with the up/downclip")
         logger.info("Proceeding without clipping systematics for {}".format(feature_name))
         sel = (fracarea < 1.1) & (fracarea > 0.9)
+    # keep only pixels with targets / observations 
+    # --> we are not in the case where there is only one objects per pixels otherwise decrease Nside
+    sel &= (targets > 0) 
     targets = targets[sel]
     feature = feature[sel]
 
@@ -127,19 +130,19 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
     wbin = np.digitize(feature, bins, right=True)
 
     if use_mean:
-        norm_targets = targets/np.nanmean(targets)
-        # I expect to see mean of empty slice (no non NaN value in the considered bin --> return nan value --> ok
+        norm_targets = targets/np.mean(targets)
+        # I expect to see mean of empty slice --> return nan value --> ok
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            meds = [np.nanmean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+            meds = [np.mean(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
     else:
         # build normalized targets : the normalization is done by the median density
         norm_targets = targets/np.nanmedian(targets)
         # digitization of the normalized target density values (first digitized bin is 1 not zero)
-        meds = [np.nanmedian(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
+        meds = [np.median(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
 
 
     # error for mean (estimation of the std from sample)
-    err_meds = [np.nanstd(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else 0 for bin in range(1, nbins+1)]
+    err_meds = [np.std(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else np.NaN for bin in range(1, nbins+1)]
 
     return bins, (bins[:-1] + bins[1:])/ 2, meds, nbr_obj_bins, err_meds
