@@ -9,7 +9,7 @@ This package contains usefull functions/routines for my work in [DESI](https://w
 License :
 ---------
 
-Feel free to use/modify these scripts while you link and quote them to you work. Please contact the author to obtain the corresponding reference.
+Feel free to use/modify these scripts while you link and quote them to your work. Please, contact the author to obtain the corresponding reference.
 
 Python code :
 -------------
