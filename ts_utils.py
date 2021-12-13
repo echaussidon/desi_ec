@@ -118,12 +118,33 @@ def compute_proba(dataFrame):
     return proba_rf
 
 
-def build_pixmap(dataFrame, Nside, use_weight=False, in_deg=True):
+def build_pixmap(dataFrame, Nside, in_deg=False):
     pixmap = np.zeros(hp.nside2npix(Nside))
     pixels = hp.ang2pix(Nside, dataFrame['RA'][:], dataFrame['DEC'][:], nest=True, lonlat=True)
     pix, counts = np.unique(pixels, return_counts=True)
     pixmap[pix] = counts
-    pixmap /= hp.nside2pixarea(Nside, degrees=True)
+    if in_deg:
+        pixmap /= hp.nside2pixarea(Nside, degrees=True)
+    return pixmap
+
+
+def build_pixmap_from_weight(dataFrame, weight, Nside, in_deg=False):
+    pixels = hp.ang2pix(Nside, dataFrame['RA'].values, dataFrame['DEC'].values, nest=True, lonlat=True)
+
+    ind_sort = np.argsort(pixels)
+    num_pix, idx = np.unique(pixels[ind_sort], return_index=True)
+    # to avoid problem with i == (len(num) - 1)
+    idx = np.append(idx, len(pixels))
+
+    weight_sorted = weight[ind_sort]
+
+    pixmap = np.zeros(hp.nside2npix(Nside))
+    for i, num in enumerate(num_pix):
+        pixmap[num] = np.sum(weight_sorted[idx[i]: idx[i+1]])
+        
+    if in_deg:
+        pixmap /= hp.nside2pixarea(Nside, degrees=True)
+        
     return pixmap
 
 
@@ -244,6 +265,11 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
         elif key_word == 'Des':
             _, _, pix_to_keep = DR9.load_photometry()
             key_word_sys = key_word
+        elif key_word == 'Des_mid':
+            _, _, pix_to_keep = DR9.load_photometry()
+            _, _, _, tmp = DR9.load_elg_region(ngc_sgc_split=True)
+            pix_to_keep = pix_to_keep & ~tmp
+            key_word_sys = 'Des'
         elif key_word == 'South_mid':
             _, pix_to_keep, _ = DR9.load_elg_region()
             key_word_sys = 'South'
@@ -300,7 +326,7 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
                     normalisation = nbr_obj_bins/0.1
                 else:
                     normalisation = nbr_obj_bins.sum()
-                ax_hist.bar(binmid, nbr_obj_bins/normalisation, alpha=0.4, color='dimgray', align='center', width=(bins[1:] - bins[:-1]), label='Fraction of nbr objects by bin \n(after correction) ')
+                ax_hist.bar(binmid, nbr_obj_bins/normalisation, alpha=0.4, color='dimgray', align='center', width=(bins[1:] - bins[:-1]), label='Fraction of nbr objects by bin')
                 ax_hist.grid(False)
                 ax_hist.set_yticks([])
 

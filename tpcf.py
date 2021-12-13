@@ -60,13 +60,16 @@ log = logging.getLogger('SysWeight')
 
 class SysWeight(object):
 
-    def __init__(self, tracer="LRG", survey='SV3', Nside=None, use_stream=False, dir_weight="/global/cfs/cdirs/desi/users/edmondc/Imaging_weight/"):
+    def __init__(self, tracer="LRG", survey='SV3', engine='EC', Nside=None, use_stream=False):
         """
         Survey is eihter SV3 or MAIN.
+        Engine is either EC (moi dans mon dossier), MR (Medhi) or RZ (Rongpu)
         Tracer is either LRG, LRG_LOWDENS, ELG, ELG_HIP, QSO for SV3 and QSO for MAIN
         """
+
         self.tracer=tracer
         self.survey=survey
+        self.engine=engine
         if Nside is not None:
             self.nside = Nside
         elif tracer in ["QSO", "ELG_VLO"]:
@@ -74,13 +77,32 @@ class SysWeight(object):
         else:
             self.nside=512
 
+        # for engine=EC
         suffixe=''
         if use_stream:
             suffixe='_with_stream'
 
-        weight_file = os.path.join(dir_weight, f"{survey}/{tracer}_imaging_weight_{self.nside}{suffixe}.npy")
-        logging.info(f"Read imaging weight: {weight_file}")
-        self.map = np.load(weight_file)
+        if engine=='EC':
+            dir_weight="/global/cfs/cdirs/desi/users/edmondc/Imaging_weight"
+            weight_file = os.path.join(dir_weight, f"{survey}/{tracer}_imaging_weight_{self.nside}{suffixe}.npy")
+            logging.info(f"Read imaging weight: {weight_file}")
+            self.map = np.load(weight_file)
+            
+        elif engine=='MR':
+            if self.nside != 256 or survey != 'SV3':
+                log.error('Medhi maps are only in Nside=256 and for survey=SV3')
+                sys.exit()
+            else:
+                if tracer=='LRG':
+                    weight_file = "/global/cfs/cdirs/desi/cosmosim/FirstGenMocks/SystematicMaps/NN_based_Mehdi/lrg_selection_v3.fits"
+                elif tracer == 'ELG':
+                    weight_file = "/global/cfs/cdirs/desi/cosmosim/FirstGenMocks/SystematicMaps/NN_based_Mehdi/elg_selection_v2.fits"
+                else:
+                    logger.error('NOT AVAILABLE FOR QSO')
+                    sys.exit()
+            logging.info(f"Read imaging weight: {weight_file}")
+            self.map = fitsio.FITS(weight_file)[-1]
+
 
     def __call__(self, ra, dec):
         """
@@ -92,7 +114,7 @@ class SysWeight(object):
     def plot_map(self):
         from plot import plot_moll, to_tex
         plot_moll(self.map - 1, min=-0.2, max=0.2, label=to_tex(self.tracer))
-        
+
 #------------------------------------------------------------------------------#
 def read_fits(filename):
     logger.info(f'Read fits file from : {filename}')
