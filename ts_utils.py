@@ -141,10 +141,10 @@ def build_pixmap_from_weight(dataFrame, weight, Nside, in_deg=False):
     pixmap = np.zeros(hp.nside2npix(Nside))
     for i, num in enumerate(num_pix):
         pixmap[num] = np.sum(weight_sorted[idx[i]: idx[i+1]])
-        
+
     if in_deg:
         pixmap /= hp.nside2pixarea(Nside, degrees=True)
-        
+
     return pixmap
 
 
@@ -219,11 +219,11 @@ from desitarget.io import load_pixweight_recarray
 from systematics import _load_systematics, systematics_med
 from desi_footprint import DR9_footprint
 
-def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['North', 'South', 'Des'], Nside=256, remove_LMC=False, clear_south=True,
+def plot_systematic_from_map(map_list, label_list, savedir='', suffixe='', zone_to_plot=['North', 'South', 'Des'], Nside=256, remove_LMC=False, clear_south=True,
                             pixweight_path='/global/cfs/cdirs/desi/target/catalogs/dr9/1.1.1/pixweight/main/resolve/dark/pixweight-1-dark.fits',
                             sgr_stream_path='/global/homes/e/edmondc/Systematics/regressor/Sagittarius_Stream/sagittarius_stream_256.npy',
                             ax_lim=0.3, adaptative_binning=False, nobjects_by_bins=2000, show=False, save=True,
-                            n_bins=None):
+                            n_bins=None, correct_map_with_fracarea=True):
 
     #load DR9 region
     DR9 = DR9_footprint(Nside, remove_LMC=remove_LMC, clear_south=clear_south)
@@ -234,9 +234,14 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
     if Nside != 256:
         sgr_stream_tot = hp.ud_grade(sgr_stream_tot, Nside, order_in=True)
 
-    # correct map with the fracarea (for maskbit 1, 12, 13)
-    with np.errstate(divide='ignore'): # Ok --> on n'utilise pas les pixels qui n'ont pas été observé, ils sont en-dehors du footprint
-        map_list_tot = [mp/pixmap_tot['FRACAREA_12290'] for mp in map_list]
+    if correct_map_with_fracarea:
+        # correct map with the fracarea (for maskbit 1, 12, 13)
+        with np.errstate(divide='ignore'): # Ok --> on n'utilise pas les pixels qui n'ont pas été observé, ils sont en-dehors du footprint
+            logger.info("Correct maps with FRACAREA_12290 (Maskbit 1, 12, 13)")
+            map_list_tot = [mp/pixmap_tot['FRACAREA_12290'] for mp in map_list]
+    else:
+        logger.info("MAPS ARE NOT CORRECTED with fracarea_12290 (fracarea_12290 is only used in sysmeds to keep pixels which are reliable in term of DR9")
+        map_list_tot = map_list
 
     sysdic = _load_systematics()
     sysnames = list(sysdic.keys())
@@ -312,7 +317,7 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
                 ax = fig.add_subplot(gs[i//3, i%3])
                 ax.set_xlabel(plotlabel)
                 if i in [0, 3, 6]:
-                    ax.set_ylabel("Relative QSO density - 1")
+                    ax.set_ylabel("Relative density - 1")
                 ax.set_ylim([-ax_lim, ax_lim])
 
                 for mp, label in zip(map_list, label_list):
@@ -344,7 +349,7 @@ def plot_systematic_from_map(map_list, label_list, savedir='', zone_to_plot=['No
                 ax_hist.legend(bbox_to_anchor=(-1.1, 0.35), loc='upper left', borderaxespad=0., frameon=False, ncol=1, fontsize='large')
 
         if save:
-            plt.savefig(savedir+"{}_systematics_plot.pdf".format(key_word))
+            plt.savefig(savedir+"{}_systematics_plot_{}.pdf".format(key_word, suffixe))
         if show:
             plt.show()
         else:

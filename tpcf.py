@@ -87,22 +87,12 @@ class SysWeight(object):
             weight_file = os.path.join(dir_weight, f"{survey}/{tracer}_imaging_weight_{self.nside}{suffixe}.npy")
             logging.info(f"Read imaging weight: {weight_file}")
             self.map = np.load(weight_file)
-            
-        elif engine=='MR':
-            if self.nside != 256 or survey != 'SV3':
-                log.error('Medhi maps are only in Nside=256 and for survey=SV3')
-                sys.exit()
-            else:
-                if tracer=='LRG':
-                    weight_file = "/global/cfs/cdirs/desi/cosmosim/FirstGenMocks/SystematicMaps/NN_based_Mehdi/lrg_selection_v3.fits"
-                elif tracer == 'ELG':
-                    weight_file = "/global/cfs/cdirs/desi/cosmosim/FirstGenMocks/SystematicMaps/NN_based_Mehdi/elg_selection_v2.fits"
-                else:
-                    logger.error('NOT AVAILABLE FOR QSO')
-                    sys.exit()
-            logging.info(f"Read imaging weight: {weight_file}")
-            self.map = fitsio.FITS(weight_file)[-1]
 
+        elif engine=='MR' or engine == 'RZ':
+            dir_weight = f'/global/cfs/cdirs/desi/cosmosim/FirstGenMocks/SystematicMaps/w_sys_{engine}'
+            weight_file = os.path.join(dir_weight, f"{survey}/{tracer}_imaging_weight_{self.nside}.npy")
+            logging.info(f"Read imaging weight: {weight_file}")
+            self.map = np.load(weight_file)
 
     def __call__(self, ra, dec):
         """

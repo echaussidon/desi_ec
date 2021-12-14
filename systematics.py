@@ -111,9 +111,9 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
         logger.info("Pixel map has no areas (with >90% coverage) with the up/downclip")
         logger.info("Proceeding without clipping systematics for {}".format(feature_name))
         sel = (fracarea < 1.1) & (fracarea > 0.9)
-    # keep only pixels with targets / observations 
+    # keep only pixels with targets / observations
     # --> we are not in the case where there is only one objects per pixels otherwise decrease Nside
-    sel &= (targets > 0) 
+    sel &= (targets > 0)
     targets = targets[sel]
     feature = feature[sel]
 
@@ -123,7 +123,7 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
         bins=feature[ksort[0::nbr_obj_bins]] #Here, get the bins from the data set (needed to be sorted)
         bins=np.append(bins,feature[ksort[-1]]) #add last point
         nbins = bins.size - 1 #OK
-    else: # create bin with fix size (depends on the up/downclip value)
+    else: # create bin with fix size (depends on the up/downclip value or minimal / maximal value of feature if up/downclip is too large)
         nbr_obj_bins, bins = np.histogram(feature, nbins)
 
     # find in which bins belong each feature value
@@ -140,7 +140,6 @@ def systematics_med(targets, fracarea, feature, feature_name, downclip=None, upc
         norm_targets = targets/np.nanmedian(targets)
         # digitization of the normalized target density values (first digitized bin is 1 not zero)
         meds = [np.median(norm_targets[wbin == bin]) for bin in range(1, nbins+1)]
-
 
     # error for mean (estimation of the std from sample)
     err_meds = [np.std(norm_targets[wbin == bin]) / np.sqrt((wbin == bin).sum() - 1) if ((wbin == bin).sum() > 1) else np.NaN for bin in range(1, nbins+1)]
