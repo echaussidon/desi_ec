@@ -7,9 +7,12 @@ logger = logging.getLogger("systematics")
 import numpy as np
 import warnings
 
+
 def f(x) : return 22.5 - 2.5*np.log10(5/np.sqrt(x))
 
+
 def g(y) : return 25*10**(2*(y - 22.5)/2.5)
+
 
 def _load_systematics_old():
     """
