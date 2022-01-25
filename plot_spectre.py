@@ -93,8 +93,8 @@ def plot_spectrum(tile, night, petal, targetid, path_to_tiles=PATH_TILES,
                   ax=None, show=True, savename=None, gaussian_smoothing_plot=5):
 
     spectra_name = f'{path_to_tiles}/{tile}/{night}/coadd-{petal}-{tile}-thru{night}.fits'
-    zbest_name = f'{path_to_tiles}/{tile}/{night}/zbest-{petal}-{tile}-thru{night}.fits'
-    redrock_name = f'{path_to_tiles}/{tile}/{night}/redrock-{petal}-{tile}-thru{night}.h5'
+    zbest_name = f'{path_to_tiles}/{tile}/{night}/redrock-{petal}-{tile}-thru{night}.fits'
+    redrock_name = f'{path_to_tiles}/{tile}/{night}/rrdetails-{petal}-{tile}-thru{night}.h5'
 
     wavelength, flux, ivar_flux = get_spectra(spectra_name, targetid)
     flux_smooth = gaussian_filter(flux, gaussian_smoothing_plot)
