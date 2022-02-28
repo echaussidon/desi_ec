@@ -15,8 +15,6 @@ from wrapper import time_measurement
 
 from desitarget.myRF import myRF
 from desitarget.cuts import shift_photo_north
-from desitarget.geomask import hp_in_box
-from pkg_resources import resource_filename
 
 #Y a une fonction dans desiarget pour le faire mais ok on perd pas de temps (et puis c'est la ou je l'ai mis !)
 pathToRF = '/global/homes/e/edmondc/Software/desitarget/py/desitarget/data'
@@ -26,7 +24,7 @@ nfeatures = 11
 
 ## WARNING :
 ##
-## Build to work with pandas DataFrame, read target file with tpcf.read_fits_to_pandas
+## Build to work with pandas DataFrame, read target file with tpcf.read_fits_to_pandas for instance
 
 #------------------------------------------------------------------------------#
 # Usefull fonction
@@ -187,6 +185,7 @@ def add_footprint_for_cut_to_df(dataFrame):
     def give_footprint(dataFrame):
         # Compute in which zone the target is
         # To apply a corresponding threshold
+        # this is what it is done in desitarget. (c'est moi qu'il l'ait fait)
         is_north = (dataFrame['DEC'] >= 32.2) &\
                    (dataFrame['RA'] >= 60) &\
                    (dataFrame['RA'] <= 310)
@@ -207,3 +206,53 @@ def add_footprint_for_cut_to_df(dataFrame):
     dataFrame['IS_NORTH'] = is_north
     dataFrame['IS_SOUTH'] = is_south
     dataFrame['IS_DES'] = is_des
+    
+
+#------------------------------------------------------------------------------#
+# Use prospect:
+
+def build_prospect_html_viewer_from_cumulative(datadir='/global/cfs/cdirs/desi/spectro/redux/fuji/tiles/cumulative', 
+                               tiles=['80605', '80607', '80609'], 
+                               targets=[39627688738031648, 39627646564309906], 
+                               html_dir='', title='prospect_spectra_from_cumulative'):
+    """
+    Build html file containing the spectra of the targets with the corresponding redrock fit from cumulative directory. 
+    Warning: tiles / targets  should be a list. --> use .tolist() from a np.array
+    """    
+    from prospect import viewer, utilities
+    
+    subset_db = utilities.create_subsetdb(datadir, dirtree_type='cumulative', tiles=tiles)
+    target_db = utilities.create_targetdb(datadir, subset_db, dirtree_type='cumulative')
+
+    ### Prepare adapted set of Spectra + catalogs
+    # spectra, zcat, rrcat are entry-matched
+    # if with_redrock==False, rrcat is None
+    spectra, zcat, rrcat = utilities.load_spectra_zcat_from_targets(targets, datadir, target_db, dirtree_type='cumulative', with_redrock_details=True)
+
+    viewer.plotspectra(spectra, zcatalog=zcat, redrock_cat=rrcat, title=title, 
+                       top_metadata=['TARGETID', 'COADD_EXPTIME', 'mag_G', 'mag_R', 'mag_Z'], 
+                       notebook=False, 
+                       html_dir=html_dir)
+
+def build_prospect_html_viewer_from_pixels(datadir='/global/cfs/cdirs/desi/spectro/redux/fuji/healpix', 
+                                           pixels=['10150'], 
+                                           targets=[39633319012339098, 39633319012339150],
+                                           html_dir='', title='prospect_spectra_from_healpix'):
+    """
+    Build html file containing the spectra of the targets with the corresponding redrock fit from healpix directory. 
+    Warning: pixels / targets  should be a list. --> use .tolist() from a np.array
+    """ 
+    from prospect import viewer, utilities
+    
+    subset_db = utilities.create_subsetdb(datadir, dirtree_type='healpix', survey_program=['sv3', 'dark'], pixels=pixels)
+    target_db = utilities.create_targetdb(datadir, subset_db, dirtree_type='healpix')
+
+    ### Prepare adapted set of Spectra + catalogs
+    # spectra, zcat, rrcat are entry-matched
+    # if with_redrock==False, rrcat is None
+    spectra, zcat, rrcat = utilities.load_spectra_zcat_from_targets(targets, datadir, target_db, dirtree_type='healpix', with_redrock_details=True)
+
+    viewer.plotspectra(spectra, zcatalog=zcat, redrock_cat=rrcat, title=title, 
+                       top_metadata=['TARGETID', 'COADD_EXPTIME', 'mag_G', 'mag_R', 'mag_Z'], 
+                       notebook=False, 
+                       html_dir=html_dir)
