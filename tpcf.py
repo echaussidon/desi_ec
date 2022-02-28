@@ -59,6 +59,8 @@ def generate_sample_mcmc(Nsample, x_posterior, y_posterior, t_max=100, show_resu
 log = logging.getLogger('SysWeight')
 
 class SysWeight(object):
+    
+    """ Depradected --> use PhotoWeight class from regressis."""
 
     def __init__(self, tracer="LRG", survey='SV3', engine='EC', Nside=None, use_stream=False):
         """
@@ -154,11 +156,14 @@ def make_selection(darray, criterions):
 # FOR PYCORR !
 #------------------------------------------------------------------------------#
 
-
+# Nothing for PYCORR here --> but see Clustering/DA02 for example with pycorr.
 
 #------------------------------------------------------------------------------#
 # FOR CUTE !
 #------------------------------------------------------------------------------#
+
+# Old stuff. Keep here for retrocompatibility of some notebook. --> Use now pycorr with corrfunc
+
 def save_catalog_txt(catalog, selection, use_redshift='from_cat', add_redshift=None, use_weight='from_cat', add_weight=None, filename='oups.fits'):
     """Create catalog [RA, DEC, Z, WEIGHT] in .txt format.
     Parameters

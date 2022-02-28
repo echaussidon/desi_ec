@@ -4,6 +4,8 @@ import sys
 
 _logging_handler = None
 
+## See regressis.logger pour une version améliorer de ca :)
+
 def setup_logging(log_level="info", stream=sys.stdout, log_file=None):
     """
 
