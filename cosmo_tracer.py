@@ -170,7 +170,8 @@ class Tracer(object):
         new = self.__copy__()
         new.__dict__.update(kwargs)
 
-        #On oublie pas de mettre à jours le volume et la densité !
+        #On oublie pas de mettre à jours le volume et la densité  et le beta!
+        new.beta = new.cosmo.get_background().growth_rate(new.z0) / new.bias
         new.V_survey = new.Volume()
         new.n_survey = new.Density()
 
