@@ -118,7 +118,7 @@ class PowerSpectrum(object):
         # To avoid problem with negative fnl --> set at 0 or np.NaN ? the powerspectrum below the k_min value
         # Use interpolation to invert the function
         if fnl < 0.0:
-            self.k_min = interp1d(np.logspace(-5, 2, 500)**2*self.T_from_class(np.logspace(-5, 2, 500)), np.logspace(-5, 2, 500), kind='cubic')(-self.amp/self.tracer.bias)
+            self.k_min = interp1d(np.logspace(-5, 2, 500)**2*self.T_from_class(np.logspace(-5, 2, 500)*self.bg.growth_factor(self.tracer.z0)), np.logspace(-5, 2, 500), kind='cubic')(-self.amp/self.tracer.bias)
     
     
     def set_Plin_from_array(self, k, new_Plin, keep_bias=True):
@@ -156,6 +156,8 @@ class PowerSpectrum(object):
 
             We normalize the transfer function :math:`T(k)` to unity as
             :math:`k \rightarrow 0` at :math:`z=0`.
+            
+            WARNING : T does not contain the growth factor DO NOT FORGET TO multipy T by D(z)
 
             Parameters
             ---------
@@ -212,9 +214,9 @@ class PowerSpectrum(object):
         if 'k_min' in self.__dict__.keys():
             not_masked = k > self.k_min
             Pk_total = np.zeros(k.shape)
-            Pk_total[not_masked] = self.Plin(k[not_masked]) * (self.tracer.bias + self.amp/(self.T_from_class(k[not_masked])*k[not_masked]**2))**2
+            Pk_total[not_masked] = self.Plin(k[not_masked]) * (self.tracer.bias + self.amp/(self.T_from_class(k[not_masked])*self.bg.growth_factor(self.tracer.z0)*k[not_masked]**2))**2
         else:
-            Pk_total = self.Plin(k) * (self.tracer.bias + self.amp/(self.T_from_class(k)*k**2))**2
+            Pk_total = self.Plin(k) * (self.tracer.bias + self.amp/(self.T_from_class(k)*self.bg.growth_factor(self.tracer.z0)*k**2))**2
         return Pk_total
     
     
