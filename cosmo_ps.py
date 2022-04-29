@@ -80,7 +80,7 @@ class PowerSpectrum(object):
     Implementation of the Power spectrum with f_nl following Slosar 2008
     """
     
-    def __init__(self, tracer, fnl=0.0):
+    def __init__(self, tracer, fnl=0.0, cut_power=False):
         """
         Initialize :class:`PowerSpectrum`
         
@@ -90,6 +90,8 @@ class PowerSpectrum(object):
                  tracer class containing the description of the tracer
         fnl : float
               parameter to depict the local non-gaussianity type (following the CMB convention)
+        cut_power : bool
+            If true --> remove the power below kmin value (kmin is when power spectrum == 0)
 
         """
         
@@ -97,6 +99,7 @@ class PowerSpectrum(object):
         self.tracer = tracer.copy()
         
         self.fnl = fnl
+        self
         
         # cosmo / background / fourier
         self.bg = self.tracer.cosmo.get_background()
@@ -117,7 +120,7 @@ class PowerSpectrum(object):
         
         # To avoid problem with negative fnl --> set at 0 or np.NaN ? the powerspectrum below the k_min value
         # Use interpolation to invert the function
-        if fnl < 0.0:
+        if cut_power and (fnl < 0.0):
             self.k_min = interp1d(np.logspace(-5, 2, 500)**2*self.T_from_class(np.logspace(-5, 2, 500)*self.bg.growth_factor(self.tracer.z0)), np.logspace(-5, 2, 500), kind='cubic')(-self.amp/self.tracer.bias)
     
     
