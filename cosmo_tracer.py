@@ -33,6 +33,8 @@ class DN_DZ(object):
         ----------
 
         """
+        
+        print("ATTENTION POUR L'INSTANT C'est n'importe quoi !! -> on ne peut aps vraiment interpoler un nz normalise, en tout cas il faut le renormaliser ensuite !!")
 
         self.filename = filename
         if self.filename.split('.')[-1] == 'txt':
