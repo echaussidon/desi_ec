@@ -135,13 +135,13 @@ class Tracer(object):
 
     def __str__(self):
         string = "\nBuild Tracer with the following parameters:"
-        string += "\n    * name: " + str(self.name)
-        string += "\n    * bias: " + str(self.bias)
-        string += "\n    * pop: " + str(self.pop) + " --> bias_phi: " + str(self.bias_phi)
-        string += "\n    * z0: " + str(self.z0)
-        string += "\n    * z_width: " + str(self.z_width)
-        string += "\n    * area: " + str(self.area)
-        string += "\n    * density_deg2: " + str(self.density_deg2)
+        string += f"\n    * name: {self.name}"
+        string += f"\n    * bias: {self.bias} -->  beta: {self.beta:2.2f}"
+        string += f"\n    * pop: {self.pop} -->  bias_phi: {self.bias_phi:2.3f}"
+        string += f"\n    * z0: {self.z0:2.3f}"
+        string += f"\n    * z_width: {self.z_width}"
+        string += f"\n    * area: {self.area}"
+        string += f"\n    * density_deg2: {self.density_deg2}"
         string += f"\n    * Survey Volume (Gpc/h)^3 = {self.V_survey/1.0e9:2.2f}"
         string += f"\n    * Survey density =  {self.n_survey:.2e}"
         string += f"\n    * Is in shoot noise limited region ? {self.shot_noise_limited} (only useful for sigma_P)\n"
@@ -169,9 +169,9 @@ class Tracer(object):
         new = self.__copy__()
         new.__dict__.update(kwargs)
 
-        # On oublie pas de mettre à jours le volume et la densité  et le beta et bias_phi!
+        # On oublie pas de mettre à jours les quantites que l'on calcul pendant l'initialisation
         new.beta = new.cosmo.get_background().growth_rate(new.z0) / new.bias
-        new.bias_fnl = 2 * 1.686 * (new.bias - new.pop)
+        new.bias_phi = 2 * 1.686 * (new.bias - new.pop)
         new.V_survey = new.Volume()
         new.n_survey = new.Density()
 

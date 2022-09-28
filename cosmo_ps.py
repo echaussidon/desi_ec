@@ -105,10 +105,6 @@ class PowerSpectrum(object):
         # Compute the linear power spectrum at z0 with fo
         self.Plin = self.fo.pk_interpolator(extrap_kmin=extrap_kmin, extrap_kmax=extrap_kmax).to_1d(z=self.tracer.z0)
 
-        # Compute b_phi (paramtrization from Slozar et al. 2008)
-        delta_c = 1.686  # the spherical collapse linear over-density
-        self.b_phi = 2 * delta_c * (self.tracer.bias - self.tracer.pop)
-
         # To avoid problem with negative fnl --> set at 0 or np.nan ? the powerspectrum below the k_min value
         # This not a good idea, the behaviour is real ? BTW, we never use these scales
         # Use interpolation to invert the function
