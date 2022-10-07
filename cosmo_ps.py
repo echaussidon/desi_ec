@@ -95,15 +95,12 @@ class PowerSpectrum(object):
 
         # tracer parameters
         self.tracer = tracer.copy()
-
+        # local PNG
         self.fnl = fnl
 
-        # cosmo / background / fourier
-        self.bg = self.tracer.cosmo.get_background()
-        self.fo = self.tracer.cosmo.get_fourier()
 
         # Compute the linear power spectrum at z0 with fo
-        self.Plin = self.fo.pk_interpolator(extrap_kmin=extrap_kmin, extrap_kmax=extrap_kmax).to_1d(z=self.tracer.z0)
+        self.Plin = self.tracer.cosmo.get_fourier().pk_interpolator(extrap_kmin=extrap_kmin, extrap_kmax=extrap_kmax).to_1d(z=self.tracer.z0)
 
         # To avoid problem with negative fnl --> set at 0 or np.nan ? the powerspectrum below the k_min value
         # This not a good idea, the behaviour is real ? BTW, we never use these scales
@@ -146,7 +143,7 @@ class PowerSpectrum(object):
         else:
             """ Follow the description of Slozar et al. 2008. This correct but very less clear than the direct computation """
 
-            linearP = self.fo.pk_interpolator().to_1d(z=0)  # at z=0 !!
+            linearP = self.tracer.cosmo.get_fourier().pk_interpolator().to_1d(z=0)  # at z=0 !!
             primordialP = self.tracer.cosmo.get_primordial().pk_interpolator()  # power_prim is ~ k^(n_s - 1)
 
             # k0 in order to renormalized at z=0, T = 1 when k-->0
@@ -161,7 +158,7 @@ class PowerSpectrum(object):
             # By defintion H0 = 100 h.Mpc^-1.km.s^-1
             H0_c = 100. / (constants.c / 1000)
 
-            T = 2 / 3 / H0_c**2 / self.bg.Omega_m(0.0) * k**2 * Tk * normalized_growth_factor
+            T = 2 / 3 / H0_c**2 / self.tracer.cosmo.get_background().Omega_m(0.0) * k**2 * Tk * normalized_growth_factor
 
         return T
 
@@ -189,7 +186,7 @@ class PowerSpectrum(object):
             Pk_total = self.Plin(k) * (self.tracer.bias + self.fnl * self.tracer.bias_phi / self.T_phi_delta(k))**2
         return Pk_total
 
-    def set_Plin_from_array(self, k, new_Plin, keep_bias=True):
+    def set_Plin_from_array(self, k, new_Plin):
         """
         Modify the value of Plin from k, new_Plin array. Help us to propagate the errors since
         we will suppose that they are independant and everything is linear !
@@ -205,13 +202,9 @@ class PowerSpectrum(object):
             if True keep the same attributes.
         """
 
-        self.Plin = PowerSpectrumInterpolator1D(k, new_Plin)
+        sel = k > 0
+        self.Plin = PowerSpectrumInterpolator1D(k[sel], new_Plin[sel])
 
-        if ~keep_bias:
-            # self(k) will be exactly self.Plin(k)
-            self.tracer.bias = 1.0
-            self.fnl = 0.0
-            self.amp = 0.0
 
     def monopole(self, k):
         """
