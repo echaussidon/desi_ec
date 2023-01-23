@@ -98,7 +98,6 @@ class PowerSpectrum(object):
         # local PNG
         self.fnl = fnl
 
-
         # Compute the linear power spectrum at z0 with fo
         self.Plin = self.tracer.cosmo.get_fourier().pk_interpolator(extrap_kmin=extrap_kmin, extrap_kmax=extrap_kmax).to_1d(z=self.tracer.z0)
 
@@ -205,6 +204,14 @@ class PowerSpectrum(object):
         sel = k > 0
         self.Plin = PowerSpectrumInterpolator1D(k[sel], new_Plin[sel])
 
+    def _beta_with_fnl(self, k):
+        """
+        Beta computed in cosmo_tracer do not use the real bias (ie) b + Delta b(k).
+
+        I need to recompute it here since Delta b depends on k.
+        """
+
+        return self.tracer.cosmo.get_background().growth_rate(self.tracer.z0) / (self.tracer.bias + self.fnl * self.tracer.bias_phi / self.T_phi_delta(k))
 
     def monopole(self, k):
         """
@@ -220,7 +227,7 @@ class PowerSpectrum(object):
             The monopole. Size of k
 
         """
-        return (1 + 2 / 3 * self.tracer.beta + 1 / 5 * self.tracer.beta**2) * self(k)
+        return (1 + 2 / 3 * self._beta_with_fnl(k) + 1 / 5 * self._beta_with_fnl(k)**2) * self(k)
 
     def quadrupole(self, k):
         """
@@ -236,7 +243,7 @@ class PowerSpectrum(object):
             The quadrupole. Size of k
 
         """
-        return (4 / 3 * self.tracer.beta + 4 / 7 * self.tracer.beta**2) * self(k)
+        return (4 / 3 * self._beta_with_fnl(k) + 4 / 7 * self._beta_with_fnl(k)**2) * self(k)
 
     def hexadecapole(self, k):
         """
@@ -252,7 +259,7 @@ class PowerSpectrum(object):
             The quadrupole. Size of k
 
         """
-        return (8 / 35 * self.tracer.beta**2) * self(k)
+        return (8 / 35 * self._beta_with_fnl(k)**2) * self(k)
 
     def rsd(self, k):
         """

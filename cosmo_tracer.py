@@ -116,6 +116,7 @@ class Tracer(object):
         self.dn_dz = dn_dz
 
         self.bias = bias
+        # Only true for fnl=0 !!
         self.beta = self.cosmo.get_background().growth_rate(self.z0) / self.bias
         self.pop = pop
 
@@ -136,7 +137,7 @@ class Tracer(object):
     def __str__(self):
         string = "\nBuild Tracer with the following parameters:"
         string += f"\n    * name: {self.name}"
-        string += f"\n    * bias: {self.bias} -->  beta: {self.beta:2.2f}"
+        string += f"\n    * bias: {self.bias} -->  beta (constant value for fnl=0 only !): {self.beta:2.2f}"
         string += f"\n    * pop: {self.pop} -->  bias_phi: {self.bias_phi:2.3f}"
         string += f"\n    * z0: {self.z0:2.3f}"
         string += f"\n    * z_width: {self.z_width}"
