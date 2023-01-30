@@ -217,9 +217,11 @@ def build_prospect_html_viewer_from_cumulative(datadir='/global/cfs/cdirs/desi/s
                                html_dir='', title='prospect_spectra_from_cumulative'):
     """
     Build html file containing the spectra of the targets with the corresponding redrock fit from cumulative directory. 
-    Warning: tiles / targets  should be a list. --> use .tolist() from a np.array
+    Warning: tiles / targets  should be a list. --> use .tolist() from a np.array and tiles should be str.
     """    
     from prospect import viewer, utilities
+    
+    tiles = np.array(tiles, dtype='str')
     
     subset_db = utilities.create_subsetdb(datadir, dirtree_type='cumulative', tiles=tiles)
     target_db = utilities.create_targetdb(datadir, subset_db, dirtree_type='cumulative')
@@ -240,9 +242,11 @@ def build_prospect_html_viewer_from_pixels(datadir='/global/cfs/cdirs/desi/spect
                                            html_dir='', title='prospect_spectra_from_healpix'):
     """
     Build html file containing the spectra of the targets with the corresponding redrock fit from healpix directory. 
-    Warning: pixels / targets  should be a list. --> use .tolist() from a np.array
+    Warning: pixels / targets  should be a list. --> use .tolist() from a np.array and pixels should be str.
     """ 
     from prospect import viewer, utilities
+    
+    pixels = np.array(pixels, dtype='str')
     
     subset_db = utilities.create_subsetdb(datadir, dirtree_type='healpix', survey_program=['sv3', 'dark'], pixels=pixels)
     target_db = utilities.create_targetdb(datadir, subset_db, dirtree_type='healpix')
