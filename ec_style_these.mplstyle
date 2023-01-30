@@ -29,7 +29,7 @@ axes.linewidth              : 1.0          # edge linewidth
 axes.labelcolor             : black
 axes.prop_cycle             : cycler(color=['blue', 'red', 'green', 'gold', 'purple', 'black', 'yellow', 'magenta', 'cyan', 'brown', 'gray'])
 axes.formatter.use_mathtext : True # When True, use mathtext for scientific notation
-axes.labelsize : 10
+axes.labelsize : 11
 
 ## GRID
 
@@ -43,14 +43,14 @@ grid.alpha     : 0.8
 
 legend.fancybox  : True
 legend.facecolor : white
-legend.fontsize : 10
+legend.fontsize : 11
 
 ## TICKS
 
 xtick.direction : out
 ytick.direction : out
-xtick.labelsize : 10
-ytick.labelsize : 10
+xtick.labelsize : 11
+ytick.labelsize : 11
 xtick.major.size     : 5      # major tick size in points
 xtick.major.width    : 1      # major tick width in points
 ytick.major.size     : 5      # major tick size in points
