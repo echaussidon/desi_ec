@@ -63,7 +63,7 @@ def chi_to_z(s, cosmo):
 
 
 def dchi_dz(z, cosmo):
-    # attention aux unités
+    # attention aux unités ! On veut dchi/dz en Mpc/h !!
     H0 = 100 * 1000  # en m.s^-1.h.Mpc^-1
     return constants.c / (H0 * cosmo.get_background().efunc(z))
 
